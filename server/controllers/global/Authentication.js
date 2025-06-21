@@ -34,8 +34,8 @@ exports.registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Assign role based on email
-        const adminEmail = process.env.ADMIN_MAIL;
-        const employeeEmail = process.env.EMP_MAIL;
+        const adminEmail = process.env.ADMIN_MAIL || 'admin@mail.com' ;
+        const employeeEmail = process.env.EMP_MAIL || 'employee@mail.com';
         const role =
             email === adminEmail
                 ? 'admin'

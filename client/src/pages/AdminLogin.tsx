@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Lock, User } from 'lucide-react';
 import { toast } from 'sonner';
 import ThreeBackground from '@/components/ThreeBackground';
+import { jwtDecode } from "jwt-decode";
 
 const AdminLogin = () => {
     const [username, setUsername] = useState('');
@@ -28,6 +29,9 @@ const AdminLogin = () => {
             const data = await response.json();
 
             if (response.ok) {
+                const token = data.token;
+                localStorage.setItem("token", token);
+                const decoded = jwtDecode(token);
                 localStorage.setItem('adminAuthenticated', 'true');
                 toast.success('Login successful!');
                 navigate('/admin-dashboard');

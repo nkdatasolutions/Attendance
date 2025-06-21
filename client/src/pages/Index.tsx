@@ -8,14 +8,16 @@ import ThreeBackground from '@/components/ThreeBackground';
 import EmployeeModal from '@/components/EmployeeModal';
 import EmployeeList from '@/components/EmployeeList';
 import { mockEmployees, initialAttendanceRecords, Employee } from '@/data/mockEmployees';
+import { Link } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 interface AttendanceRecord {
-  employeeId: string;
-  checkInTime: string | null;
-  checkOutTime: string | null;
-  status: 'present' | 'absent' | 'checked-out';
-  date: string;
-  dailyReport?: string;
+    employeeId: string;
+    checkInTime: string | null;
+    checkOutTime: string | null;
+    status: 'present' | 'absent' | 'checked-out';
+    date: string;
+    dailyReport?: string;
 }
 
 const Index = () => {
@@ -27,6 +29,20 @@ const Index = () => {
     const [liveTime, setLiveTime] = useState<string>('');
     const [liveDate, setLiveDate] = useState<string>('');
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                setUser(decoded);
+            } catch (err) {
+                console.error("Invalid token", err);
+                localStorage.removeItem('token'); // optional: clean up
+            }
+        }
+    }, []);
 
     const getIndianTime = () => {
         return new Date().toLocaleTimeString('en-IN', {
@@ -48,20 +64,20 @@ const Index = () => {
             const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
             const data = await response.json();
             const dateTime = new Date(data.datetime);
-            
+
             const timeString = dateTime.toLocaleTimeString('en-IN', {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: true
             });
-            
+
             const dateString = dateTime.toLocaleDateString('en-IN', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
-            
+
             setLiveTime(timeString);
             setLiveDate(dateString);
         } catch (error) {
@@ -88,7 +104,7 @@ const Index = () => {
     useEffect(() => {
         // Initial fetch
         fetchLiveTime();
-        
+
         // Set up interval to fetch time every second
         intervalRef.current = setInterval(fetchLiveTime, 1000);
 
@@ -257,6 +273,7 @@ const Index = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-4 text-gray-600">
+                                <Link to={`${user ? "/admin-dashboard" : "/login"}`} className='bg-purple-400 text-white  px-4 py-2 font-semibold rounded-xl  ' > {user ? user.name : "Sign IN" }</Link>
                                 <Clock className="w-5 h-5 text-blue-600" />
                                 <div className="text-right">
                                     <p className="text-lg font-medium">{liveDate}</p>
@@ -311,8 +328,8 @@ const Index = () => {
                                         onClick={() => handleAttendanceAction(true)}
                                         disabled={!checkInAllowed}
                                         className={`h-14 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all ${checkInAllowed
-                                                ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-                                                : 'bg-gray-400 cursor-not-allowed'
+                                            ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                                            : 'bg-gray-400 cursor-not-allowed'
                                             }`}
                                     >
                                         <LogIn className="w-6 h-6 mr-3" />
