@@ -23,7 +23,13 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
     phone: '',
     email: '',
     degree: '',
-    photo: ''
+    photo: '',
+    dateOfJoined: '',
+    salary: '',
+    bankAccountNumber: '',
+    ifscCode: '',
+    aadharNumber: '',
+    workExperience: ''
   });
 
   const [generatedId, setGeneratedId] = useState('');
@@ -81,7 +87,13 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
       phone: formData.phone,
       email: formData.email || `${formData.name.toLowerCase().replace(' ', '.')}@company.com`,
       degree: formData.degree,
-      photo: formData.photo || `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face`
+      photo: formData.photo || `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face`,
+      dateOfJoined: formData.dateOfJoined,
+      salary: formData.salary,
+      bankAccountNumber: formData.bankAccountNumber,
+      ifscCode: formData.ifscCode,
+      aadharNumber: formData.aadharNumber,
+      workExperience: formData.workExperience
     };
 
     onAddEmployee(newEmployee);
@@ -95,7 +107,13 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
       phone: '',
       email: '',
       degree: '',
-      photo: ''
+      photo: '',
+      dateOfJoined: '',
+      salary: '',
+      bankAccountNumber: '',
+      ifscCode: '',
+      aadharNumber: '',
+      workExperience: ''
     });
     setGeneratedId('');
     
@@ -104,7 +122,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-xl">
             <UserPlus className="w-6 h-6 text-blue-600" />
@@ -190,7 +208,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
             </div>
           </div>
 
-          {/* Optional Fields */}
+          {/* Contact & Education */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email (Optional)</Label>
@@ -213,6 +231,81 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
                 value={formData.degree}
                 onChange={handleInputChange}
                 placeholder="e.g., B.Tech Computer Science"
+              />
+            </div>
+          </div>
+
+          {/* Personal Documents */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="aadharNumber">Aadhar Number</Label>
+              <Input
+                id="aadharNumber"
+                name="aadharNumber"
+                value={formData.aadharNumber}
+                onChange={handleInputChange}
+                placeholder="e.g., 1234 5678 9012"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="workExperience">Work Experience</Label>
+              <Input
+                id="workExperience"
+                name="workExperience"
+                value={formData.workExperience}
+                onChange={handleInputChange}
+                placeholder="e.g., 3 years in software development"
+              />
+            </div>
+          </div>
+
+          {/* Employment Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="dateOfJoined">Date of Joined</Label>
+              <Input
+                id="dateOfJoined"
+                name="dateOfJoined"
+                type="date"
+                value={formData.dateOfJoined}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="salary">Salary</Label>
+              <Input
+                id="salary"
+                name="salary"
+                value={formData.salary}
+                onChange={handleInputChange}
+                placeholder="e.g., 50000"
+              />
+            </div>
+          </div>
+
+          {/* Banking Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="bankAccountNumber">Bank Account Number</Label>
+              <Input
+                id="bankAccountNumber"
+                name="bankAccountNumber"
+                value={formData.bankAccountNumber}
+                onChange={handleInputChange}
+                placeholder="Enter bank account number"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ifscCode">IFSC Code</Label>
+              <Input
+                id="ifscCode"
+                name="ifscCode"
+                value={formData.ifscCode}
+                onChange={handleInputChange}
+                placeholder="e.g., SBIN0001234"
               />
             </div>
           </div>

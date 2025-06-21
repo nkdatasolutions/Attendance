@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,9 @@ const Index = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCheckingIn, setIsCheckingIn] = useState(true);
     const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendanceRecords);
+    const [liveTime, setLiveTime] = useState<string>('');
+    const [liveDate, setLiveDate] = useState<string>('');
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const getIndianTime = () => {
         return new Date().toLocaleTimeString('en-IN', {
@@ -39,6 +42,62 @@ const Index = () => {
             timeZone: 'Asia/Kolkata'
         });
     };
+
+    const fetchLiveTime = async () => {
+        try {
+            const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
+            const data = await response.json();
+            const dateTime = new Date(data.datetime);
+            
+            const timeString = dateTime.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            
+            const dateString = dateTime.toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            setLiveTime(timeString);
+            setLiveDate(dateString);
+        } catch (error) {
+            console.error('Failed to fetch live time:', error);
+            // Fallback to local time if API fails
+            const fallbackTime = new Date().toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            const fallbackDate = new Date().toLocaleDateString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            setLiveTime(fallbackTime);
+            setLiveDate(fallbackDate);
+        }
+    };
+
+    useEffect(() => {
+        // Initial fetch
+        fetchLiveTime();
+        
+        // Set up interval to fetch time every second
+        intervalRef.current = setInterval(fetchLiveTime, 1000);
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
 
     const getTodayDateString = () => {
         return new Date().toLocaleDateString('en-IN', {
@@ -198,10 +257,10 @@ const Index = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-4 text-gray-600">
-                                <Clock className="w-15 h-15" />
+                                <Clock className="w-5 h-5 text-blue-600" />
                                 <div className="text-right">
-                                    <p className="text-lg font-medium">{getIndianDate()}</p>
-                                    <p className="text-base text-gray-500">{getIndianTime()}</p>
+                                    <p className="text-lg font-medium">{liveDate}</p>
+                                    <p className="text-base text-gray-500">{liveTime}</p>
                                 </div>
                             </div>
                         </div>

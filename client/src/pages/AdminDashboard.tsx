@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,18 @@ import { toast } from 'sonner';
 import ThreeBackground from '@/components/ThreeBackground';
 import AddEmployeeModal from '@/components/AddEmployeeModal';
 import EditEmployeeModal from '@/components/EditEmployeeModal';
-import { mockEmployees, initialAttendanceRecords, Employee, AttendanceRecord } from '@/data/mockEmployees';
+import ViewEmployeeModal from '@/components/ViewEmployeeModal';
+import { mockEmployees, initialAttendanceRecords, Employee } from '@/data/mockEmployees';
+
+// Updated AttendanceRecord interface to include dailyReport
+interface AttendanceRecord {
+  employeeId: string;
+  checkInTime: string | null;
+  checkOutTime: string | null;
+  status: 'present' | 'absent' | 'checked-out';
+  dailyReport?: string;
+  date: string;
+}
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -18,6 +30,8 @@ const AdminDashboard = () => {
   const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
   const [isEditEmployeeModalOpen, setIsEditEmployeeModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isViewEmployeeModalOpen, setIsViewEmployeeModalOpen] = useState(false);
+  const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('adminAuthenticated');
@@ -39,6 +53,11 @@ const AdminDashboard = () => {
   const handleEditEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
     setIsEditEmployeeModalOpen(true);
+  };
+
+  const handleViewEmployee = (employee: Employee) => {
+    setViewingEmployee(employee);
+    setIsViewEmployeeModalOpen(true);
   };
 
   const handleUpdateEmployee = (updatedEmployee: Employee) => {
@@ -210,7 +229,7 @@ const AdminDashboard = () => {
                   <TableRow>
                     <TableHead>Employee</TableHead>
                     <TableHead>Position</TableHead>
-                    <TableHead>Department</TableHead>
+                    <TableHead>Daily Report</TableHead>
                     <TableHead>Check In Time</TableHead>
                     <TableHead>Check Out Time</TableHead>
                     <TableHead>Status</TableHead>
@@ -230,13 +249,28 @@ const AdminDashboard = () => {
                               className="w-10 h-10 rounded-full object-cover"
                             />
                             <div>
-                              <p className="font-medium text-gray-900">{employee.name}</p>
+                              <button
+                                onClick={() => handleViewEmployee(employee)}
+                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                              >
+                                {employee.name}
+                              </button>
                               <p className="text-sm text-gray-500">{employee.id}</p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">{employee.position}</TableCell>
-                        <TableCell>{employee.department}</TableCell>
+                        <TableCell>
+                          <div className="max-w-xs">
+                            {attendance?.dailyReport ? (
+                              <p className="text-sm text-gray-700 truncate" title={attendance.dailyReport}>
+                                {attendance.dailyReport}
+                              </p>
+                            ) : (
+                              <span className="text-gray-400 text-sm">No report</span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <span className="text-green-600 font-medium">
                             {attendance?.checkInTime || '--:--'}
@@ -309,6 +343,14 @@ const AdminDashboard = () => {
           onClose={() => setIsEditEmployeeModalOpen(false)}
           onUpdateEmployee={handleUpdateEmployee}
           employee={selectedEmployee}
+        />
+
+        {/* View Employee Modal */}
+        <ViewEmployeeModal
+          isOpen={isViewEmployeeModalOpen}
+          onClose={() => setIsViewEmployeeModalOpen(false)}
+          employee={viewingEmployee}
+          attendanceRecords={attendanceRecords}
         />
       </div>
     </div>
