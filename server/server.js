@@ -5,6 +5,7 @@ const userRouter = require('./routes/userRoutes');
 // const adminRouter = require('./routes/adminRoutes');
 const cors = require('cors');
 const globalRouter = require('./routes/globalRoutes');
+const adminRouter = require('./routes/adminRoutes');
 // app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 
 
@@ -18,7 +19,7 @@ app.use(express.json());
 // Routes
 app.use('/api/users', userRouter);
 app.use('/api/public', globalRouter);
-// app.use('/api/admin', adminRouter);
+app.use('/api/admin', adminRouter);
 
 // Error handling for undefined routes
 app.use((req, res) => {
