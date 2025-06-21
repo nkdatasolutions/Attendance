@@ -1,9 +1,20 @@
-const Employee  = require("../../models/admin/EmployeeAdd");
+const Employee = require("../../models/admin/EmployeeAdd");
+const Counter = require("../global/Counter");
 
 // ✅ Create a new employee
 const createEmployee = async (req, res) => {
     try {
-        const newEmployee = new Employee(req.body);
+
+        const counter = await Counter.findOneAndUpdate(
+            { id: "employeeId" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+
+        const paddedId = String(counter.seq).padStart(3, "0"); // e.g., 001
+        const id = `nk${paddedId}`;
+
+        const newEmployee = new Employee({ ...req.body, id});
         const saved = await newEmployee.save();
         res.status(201).json(saved);
     } catch (err) {
@@ -53,7 +64,7 @@ const updateEmployee = async (req, res) => {
 // ✅ Delete employee by ID
 const deleteEmployee = async (req, res) => {
     try {
-        const deleted = await Employee.findByIdAndDelete(req.params.id);
+        const deleted = await Employee.findOneAndDelete({ id: req.params.id });
         if (!deleted) {
             return res.status(404).json({ error: "Employee not found" });
         }
