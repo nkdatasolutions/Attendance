@@ -1,8 +1,27 @@
 exports.EmployeeAdd = (req, res, next) => {
-    const { name, position, accountno, photo, email, phone, joiningdate, experience } = req.body;
+    const requiredFields = [
+        "name",
+        "position",
+        "accountno",
+        "photo",
+        "email",
+        "phone",
+        "joiningdate",
+        "experience",
+    ];
 
-    if (!name || !position || !accountno || !photo || !email || !phone || !joiningdate || !experience) {
-        return res.status(400).json({ message: "All fields are required" });
+    const missingFields = requiredFields.filter((field) => {
+        // Handle both form-data (req.body) and file (photo via req.file)
+        if (field === "photo") {
+            return !req.file;
+        }
+        return !req.body[field];
+    });
+
+    if (missingFields.length > 0) {
+        return res.status(400).json({
+            message: `Missing required field(s): ${missingFields.join(", ")}`,
+        });
     }
 
     next();

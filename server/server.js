@@ -16,10 +16,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Middleware to handle multipart/form-data
+const fs = require("fs");
+const path = require("path");
+
+const uploadsDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Routes
 app.use('/api/users', userRouter);
 app.use('/api/public', globalRouter);
 app.use('/api/admin', adminRouter);
+
+
+// Serve static files from the React app
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Error handling for undefined routes
 app.use((req, res) => {

@@ -4,6 +4,8 @@ const Counter = require("../global/Counter");
 // ✅ Create a new employee
 const createEmployee = async (req, res) => {
     try {
+        const photoPath = req.file ? req.file.path : null;
+        const photoUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : null;
 
         const counter = await Counter.findOneAndUpdate(
             { id: "employeeId" },
@@ -14,7 +16,10 @@ const createEmployee = async (req, res) => {
         const paddedId = String(counter.seq).padStart(3, "0"); // e.g., 001
         const id = `nk${paddedId}`;
 
-        const newEmployee = new Employee({ ...req.body, id});
+        const newEmployee = new Employee({ ...req.body, id, 
+            photo: photoPath,
+            photo: photoUrl, // ✅ public-accessible URL
+        });
         const saved = await newEmployee.save();
         res.status(201).json(saved);
     } catch (err) {
@@ -35,7 +40,7 @@ const getAllEmployees = async (req, res) => {
 // ✅ Get single employee by ID
 const getEmployeeById = async (req, res) => {
     try {
-        const employee = await Employee.findById(req.params.id);
+        const employee = await Employee.findOne({ id: req.params.id }); // Use id field for lookup
         if (!employee) {
             return res.status(404).json({ error: "Employee not found" });
         }
@@ -48,10 +53,14 @@ const getEmployeeById = async (req, res) => {
 // ✅ Update employee by ID
 const updateEmployee = async (req, res) => {
     try {
-        const updated = await Employee.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true,
-        });
+        const updated = await Employee.findOneAndUpdate(
+            { id: req.params.id },   // 🔧 FIXED
+            req.body,
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
         if (!updated) {
             return res.status(404).json({ error: "Employee not found" });
         }
