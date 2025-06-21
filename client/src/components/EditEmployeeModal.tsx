@@ -15,7 +15,8 @@ interface EditEmployeeModalProps {
   employee: Employee | null;
 }
 
-const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee }: EditEmployeeModalProps) => {
+
+const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee, }: EditEmployeeModalProps  ) => {
   const [formData, setFormData] = useState({
     name: '',
     position: '',
@@ -77,10 +78,10 @@ const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee }: Edit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.position || !formData.department || !formData.phone) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
+    // if (!formData.name || !formData.position || !formData.department || !formData.phone) {
+    //   toast.error('Please fill in all required fields');
+    //   return;
+    // }
 
     if (!employee) return;
 
@@ -127,7 +128,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee }: Edit
                 <img
                   src={formData.photo}
                   alt="Employee preview"
-                  className="w-45 h-45 rounded-full object-cover border-2 border-gray-200"
+                  className="min-w-45 min-h-45 max-w-60 max-h-60 rounded-full object-cover border-2 border-gray-200"
                 />
               )}
               <div className="flex-1">
@@ -153,7 +154,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee }: Edit
                 value={formData.name}
                 onChange={handleInputChange}
                 placeholder="Enter full name"
-                required
+                
               />
             </div>
 
@@ -165,7 +166,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee }: Edit
                 value={formData.position}
                 onChange={handleInputChange}
                 placeholder="e.g., Senior Developer"
-                required
+                
               />
             </div>
           </div>
@@ -179,7 +180,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee }: Edit
                 value={formData.department}
                 onChange={handleInputChange}
                 placeholder="e.g., Content Development"
-                required
+                
               />
             </div>
 
@@ -191,7 +192,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onUpdateEmployee, employee }: Edit
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="e.g., +91 9876543210"
-                required
+                
               />
             </div>
           </div>

@@ -96,8 +96,9 @@ const AdminDashboard = () => {
             const updated = await response.json();
             setEmployees(prev => prev.map(emp => emp.id === updated.id ? updated : emp));
             toast.success('Employee updated successfully');
+            alert('Employee updated successfully');
         } catch (error) {
-            console.error(error);
+            alert(error);
             toast.error('Error updating employee');
         }
     };
@@ -414,7 +415,7 @@ const AdminDashboard = () => {
                     isOpen={isEditEmployeeModalOpen}
                     onClose={() => setIsEditEmployeeModalOpen(false)}
                     onUpdateEmployee={handleUpdateEmployee}
-                    employee={selectedEmployee}
+                    employee={selectedEmployee} 
                 />
 
                 {/* View Employee Modal */}
