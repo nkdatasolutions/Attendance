@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import { TrendingUp, User, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { Employee } from '@/data/mockEmployees';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface IncrementModalProps {
   isOpen: boolean;
@@ -16,9 +19,9 @@ interface IncrementModalProps {
 
 const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
   const [incrementData, setIncrementData] = useState({
-    incrementAmount: '',
-    effectiveDate: '',
-    reason: ''
+    incrementAmt: '',
+    incrementDate: '',
+    increason: ''
   });
 
   if (!employee) return null;
@@ -36,14 +39,14 @@ const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const workingDays = [];
-    
+
     for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
       const dayOfWeek = d.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude weekends
         workingDays.push(d.getDate());
       }
     }
-    
+
     return `${workingDays.length} working days`;
   };
 
@@ -55,25 +58,45 @@ const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!incrementData.incrementAmount || !incrementData.effectiveDate) {
+
+    if (!incrementData.incrementAmt || !incrementData.incrementDate) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    toast.success(`Increment processed for ${employee.name}!`);
-    
-    // Reset form
-    setIncrementData({
-      incrementAmount: '',
-      effectiveDate: '',
-      reason: ''
-    });
-    
-    onClose();
+    try {
+      const payload = {
+        incrementAmt: incrementData.incrementAmt,
+        incrementDate: incrementData.incrementDate,
+        increason: incrementData.increason,
+      };
+
+      const response = await axios.put(`${API_URL}/admin/employee-update/${employee.id}`, payload);
+
+      if (response.status === 200 || response.status === 204) {
+        toast.success(`Increment processed for ${employee.name}!`);
+        // Reset form
+        setIncrementData({
+          incrementAmt: '',
+          incrementDate: '',
+          increason: '',
+        });
+        onClose();
+      } else {
+        toast.error('Failed to update employee increment. Please try again.');
+      }
+    } catch (error: any) {
+      console.error(error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data?.message || 'Server error occurred.');
+      } else {
+        toast.error('Network error or unexpected error occurred.');
+      }
+    }
   };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -84,7 +107,7 @@ const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
             <span>Process Increment</span>
           </DialogTitle>
         </DialogHeader>
-        
+
         {/* Employee Info */}
         <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 mb-4">
           <div className="flex items-center space-x-3 mb-2">
@@ -105,11 +128,11 @@ const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="incrementAmount">Increment Amount (%) *</Label>
+            <Label htmlFor="incrementAmt">Increment Amount (%) *</Label>
             <Input
-              id="incrementAmount"
-              name="incrementAmount"
-              value={incrementData.incrementAmount}
+              id="incrementAmt"
+              name="incrementAmt"
+              value={incrementData.incrementAmt}
               onChange={handleInputChange}
               placeholder="e.g., 10"
               required
@@ -117,23 +140,23 @@ const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="effectiveDate">Effective Date *</Label>
+            <Label htmlFor="incrementDate">Effective Date *</Label>
             <Input
-              id="effectiveDate"
-              name="effectiveDate"
+              id="incrementDate"
+              name="incrementDate"
               type="date"
-              value={incrementData.effectiveDate}
+              value={incrementData.incrementDate}
               onChange={handleInputChange}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reason">Reason (Optional)</Label>
+            <Label htmlFor="increason">Reason (Optional)</Label>
             <Input
-              id="reason"
-              name="reason"
-              value={incrementData.reason}
+              id="increason"
+              name="increason"
+              value={incrementData.increason}
               onChange={handleInputChange}
               placeholder="Performance, promotion, etc."
             />

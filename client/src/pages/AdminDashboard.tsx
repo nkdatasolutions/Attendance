@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -201,7 +201,7 @@ const AdminDashboard = () => {
                 <header className="bg-white shadow-sm border-b">
                     <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                            <h1 className="text-2xl font-bold text-gray-900"><Link to="/">Admin Dashboard</Link></h1>
                             <p className="text-gray-600">Employee Management System</p>
                         </div>
                         <div className="flex items-center space-x-4">

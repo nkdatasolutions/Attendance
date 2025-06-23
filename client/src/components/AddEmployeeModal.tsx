@@ -26,8 +26,8 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
         phone: '',
         degree: '',
         salary: '',
-        incrementAmt: '',
-        incrementDate: '',
+        // incrementAmt: '',
+        // incrementDate: '',
         aadhar: '',
         ifsc: '',
         joiningdate: '',
@@ -81,6 +81,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
 
             console.log('Success:', response.data);
             alert("Employee added successfully!");
+            onClose();
         } catch (error) {
             // Get specific error message from backend response
             const message =
@@ -248,12 +249,14 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
                                 name="salary"
                                 value={formData.salary}
                                 onChange={handleInputChange}
+                                type='number'
+                                onWheel={(e) => e.target.blur()}
                                 placeholder="e.g., 50000"
                             />
                         </div>
                     </div>
 
-                    {/* Employment Details */}
+                    {/* Employment Details
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="incrementDate">Date of Increment</Label>
@@ -276,7 +279,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
                                 placeholder="e.g., 50000"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Banking Details */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,31 +1,47 @@
 const Employee = require("../../models/admin/EmployeeAdd");
 const Counter = require("../global/Counter");
+const mongoose = require('mongoose');
 
 // ✅ Create a new employee
 const createEmployee = async (req, res) => {
+    let counter = null; // declare here to access even in catch
+
     try {
         const photoPath = req.file ? req.file.path : null;
         const photoUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : null;
 
-        const counter = await Counter.findOneAndUpdate(
+        // Step 1: Safely increment the counter
+        counter = await Counter.findOneAndUpdate(
             { id: "employeeId" },
             { $inc: { seq: 1 } },
             { new: true, upsert: true }
         );
 
-        const paddedId = String(counter.seq).padStart(3, "0"); // e.g., 001
+        const paddedId = String(counter.seq).padStart(3, "0");
         const id = `nk${paddedId}`;
 
-        const newEmployee = new Employee({ ...req.body, id, 
-            photo: photoPath,
-            photo: photoUrl, // ✅ public-accessible URL
+        // Step 2: Create employee
+        const newEmployee = new Employee({
+            ...req.body,
+            id,
+            photo: photoUrl,
         });
+
+        // Step 3: Save to DB
         const saved = await newEmployee.save();
         res.status(201).json(saved);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error("Error creating employee:", err);
+
+        // Send back all errors, and used seq if available
+        res.status(400).json({
+            error: err.message,
+            ...(err.errors && { validationErrors: err.errors }),
+            ...(counter && { seq: counter.seq }),
+        });
     }
 };
+
 
 // ✅ Get all employees
 const getAllEmployees = async (req, res) => {

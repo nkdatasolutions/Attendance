@@ -23,6 +23,7 @@ const EmployeeSchema = new mongoose.Schema(
         salary: { type: Number, default: 0 },
         incrementAmt: { type: Number, default: 0 },
         incrementDate: { type: Date },
+        increason: { type: String, default: "" },
         aadhar: { type: Number, default: 0 },
         ifsc: { type: String, default: 0 },
         joiningdate: { type: Date, required: true },
