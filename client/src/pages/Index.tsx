@@ -88,6 +88,12 @@ const Index = () => {
     const fetchLiveTime = async () => {
         try {
             const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
+
+            // Check for rate limit or other bad responses
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
             const dateTime = new Date(data.datetime);
 
@@ -107,39 +113,39 @@ const Index = () => {
             setLiveTime(timeString);
             setLiveDate(dateString);
         } catch (error) {
-            console.error('Failed to fetch live time:', error);
-            // Fallback to local time if API fails
-            const fallbackTime = new Date().toLocaleTimeString('en-IN', {
+            console.warn('WorldTimeAPI failed, falling back to local time.', error?.message || error);
+
+            // Fallback: Use local time with timeZone override
+            const fallbackDateTime = new Date();
+
+            const fallbackTime = fallbackDateTime.toLocaleTimeString('en-IN', {
                 timeZone: 'Asia/Kolkata',
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: true
             });
-            const fallbackDate = new Date().toLocaleDateString('en-IN', {
+
+            const fallbackDate = fallbackDateTime.toLocaleDateString('en-IN', {
                 timeZone: 'Asia/Kolkata',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
+
             setLiveTime(fallbackTime);
             setLiveDate(fallbackDate);
         }
     };
 
+
     useEffect(() => {
-        // Initial fetch
-        fetchLiveTime();
+        fetchLiveTime(); // Initial fetch
+        const intervalId = setInterval(fetchLiveTime, 1000); // Update every second
 
-        // Set up interval to fetch time every second
-        intervalRef.current = setInterval(fetchLiveTime, 1000);
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
+        return () => clearInterval(intervalId); // Cleanup
     }, []);
+
 
     const getTodayDateString = () => {
         return new Date().toLocaleDateString('en-IN', {
