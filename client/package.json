@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@progress/kendo-react-spreadsheet": "^11.1.0",
+    "@progress/kendo-theme-default": "^11.0.2",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -46,6 +48,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
+    "file-saver": "^2.0.5",
     "input-otp": "^1.2.4",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.462.0",
@@ -62,6 +65,8 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.158.0",
     "vaul": "^0.9.3",
+    "xlsx": "^0.18.5",
+    "xlsx-style": "^0.8.13",
     "zod": "^3.23.8"
   },
   "devDependencies": {

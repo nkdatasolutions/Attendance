@@ -12,6 +12,8 @@ import AddEmployeeModal from '@/components/AddEmployeeModal';
 import EditEmployeeModal from '@/components/EditEmployeeModal';
 import ViewEmployeeModal from '@/components/ViewEmployeeModal';
 import axios from 'axios';
+import { utils, writeFile } from 'xlsx';
+import { saveAs } from 'file-saver';
 
 // Updated AttendanceRecord interface to include dailyReport
 
@@ -254,26 +256,129 @@ const AdminDashboard = () => {
             day: 'numeric'
         });
 
-        let csvContent = `Attendance Report - ${currentDate}\n\n`;
-        csvContent += 'Employee ID,Employee Name,Position,Department,Email,Check In Time,Check Out Time,Status\n';
+        const data = [
+            [`Attendance Report - ${currentDate}`],
+            [],
+            ["Employee ID", "Employee Name", "Position", "Email", "Check In Time", "Check Out Time", "Status", "Report"]
+        ];
 
         employees.forEach(employee => {
             const attendance = getAttendanceRecord(employee.id);
-            csvContent += `${employee.id},${employee.name},${employee.position},${employee.department},${employee.email},${attendance?.checkInTime || 'N/A'},${attendance?.checkOutTime || 'N/A'},${attendance?.status || 'Absent'}\n`;
+            const status = attendance?.absent === true ? "❌ Absent" : "✅ Present";
+
+            data.push([
+                employee.id,
+                employee.name,
+                employee.position,
+                employee.email,
+                formatTime(attendance?.checkintime) || 'N/A',
+                formatTime(attendance?.checkouttime) || 'N/A',
+                status,
+                attendance?.prodsts || 'N/A'
+            ]);
         });
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `attendance_report_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const ws = utils.aoa_to_sheet(data);
 
-        toast.success('Attendance report downloaded successfully!');
+        // Set column widths
+        ws['!cols'] = [
+            { wch: 15 }, { wch: 20 }, { wch: 20 },
+            { wch: 25 }, { wch: 25 }, { wch: 25 },
+            { wch: 15 }, { wch: 25 }
+        ];
+
+        // Merge title
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
+
+        // Style title cell
+        const titleCell = ws["A1"];
+        if (titleCell) {
+            titleCell.s = {
+                font: {
+                    name: 'Calibri',
+                    sz: 16,
+                    bold: true,
+                    color: { rgb: "1F2937" }
+                },
+                alignment: {
+                    horizontal: "center",
+                    vertical: "center"
+                }
+            };
+        }
+
+        // Header styling
+        const headerRow = 3;
+        const headers = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        headers.forEach(col => {
+            const cell = ws[`${col}${headerRow}`];
+            if (cell) {
+                cell.s = {
+                    font: {
+                        name: 'Calibri',
+                        bold: true,
+                        sz: 12,
+                        color: { rgb: "FFFFFF" }
+                    },
+                    alignment: {
+                        vertical: "center",
+                        horizontal: "center"
+                    },
+                    fill: {
+                        fgColor: { rgb: "4F46E5" } // Indigo
+                    }
+                };
+            }
+        });
+
+        // Data row styling
+        for (let i = 4; i < data.length + 3; i++) {
+            const statusCol = `G${i}`;
+            const rowColor = i % 2 === 0 ? "F9FAFB" : "FFFFFF"; // Light gray stripe
+
+            headers.forEach((col, index) => {
+                const cell = ws[`${col}${i}`];
+                if (cell) {
+                    // Apply common cell styles
+                    cell.s = {
+                        font: {
+                            name: 'Calibri',
+                            sz: 11,
+                            color: { rgb: "111827" }
+                        },
+                        alignment: {
+                            vertical: "center",
+                            horizontal: "center"
+                        },
+                        fill: {
+                            fgColor: { rgb: rowColor }
+                        }
+                    };
+
+                    // Special status coloring
+                    if (col === 'G' && typeof cell.v === 'string') {
+                        if (cell.v.includes("Absent")) {
+                            cell.s.fill.fgColor.rgb = "FECACA"; // red-200
+                        } else if (cell.v.includes("Present")) {
+                            cell.s.fill.fgColor.rgb = "D1FAE5"; // green-200
+                        }
+                    }
+
+                }
+            });
+        }
+
+        const wb = utils.book_new();
+        utils.book_append_sheet(wb, ws, "Attendance Report");
+
+        writeFile(wb, `attendance_report_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        toast.success('🎉 Attendance report downloaded successfully!', {
+            description: 'Check your downloads folder.',
+            duration: 3000,
+        });
     };
+
 
     const totalEmployees = employees.length;
     const presentEmployees = attendanceData.filter(record => record?.checkin === true).length;
