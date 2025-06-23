@@ -46,6 +46,8 @@ const AdminDashboard = () => {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [isViewEmployeeModalOpen, setIsViewEmployeeModalOpen] = useState(false);
     const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
+    const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
+    const [employeeData, setEmployeeData] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +65,53 @@ const AdminDashboard = () => {
 
         fetchEmployees();
     }, [API_URL]);
+
+    const getTodayDateString = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Fetch attendance data
+                const attendanceResponse = await fetch(`${API_URL}/employee/attendance-dateall/${getTodayDateString()}`);
+                if (!attendanceResponse.ok) {
+                    throw new Error('Failed to fetch attendance data');
+                }
+                const attendanceJson = await attendanceResponse.json();
+                const attendanceArray = Array.isArray(attendanceJson) ? attendanceJson : [attendanceJson];
+
+                setAttendanceData(attendanceArray);
+                console.log('Attendance Data:', attendanceArray);
+                // Extract employee IDs from attendance data
+                const employeeIds = Array.isArray(attendanceJson)
+                    ? attendanceJson.map(item => item.id)
+                    : [attendanceJson.id];
+
+                // Fetch employee data for all employees in attendance
+                const employeePromises = employeeIds.map(id =>
+                    fetch(`${API_URL}/admin/employee/${id}`).then(res => res.json())
+                );
+                const employees = await Promise.all(employeePromises);
+                setEmployeeData(employees);
+                console.log('Employee Data:', employees);
+
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleAddEmployee = async (newEmployeeData: FormData) => {
         try {
@@ -188,9 +237,9 @@ const AdminDashboard = () => {
     };
 
     const totalEmployees = employees.length;
-    const presentEmployees = attendanceRecords.filter(record => record.status === 'present').length;
-    const checkedOutEmployees = attendanceRecords.filter(record => record.status === 'checked-out').length;
-    const attendanceRate = Math.round(((presentEmployees + checkedOutEmployees) / totalEmployees) * 100);
+    const presentEmployees = attendanceData.filter(record => record?.checkin === true).length;
+    const checkedOutEmployees = attendanceData.filter(record => record?.checkout === true).length;
+    const attendanceRate = Math.round(((presentEmployees) / totalEmployees) * 100);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
@@ -415,7 +464,7 @@ const AdminDashboard = () => {
                     isOpen={isEditEmployeeModalOpen}
                     onClose={() => setIsEditEmployeeModalOpen(false)}
                     onUpdateEmployee={handleUpdateEmployee}
-                    employee={selectedEmployee} 
+                    employee={selectedEmployee}
                 />
 
                 {/* View Employee Modal */}
