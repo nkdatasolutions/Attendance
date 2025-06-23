@@ -6,6 +6,7 @@ const userRouter = require('./routes/userRoutes');
 const cors = require('cors');
 const globalRouter = require('./routes/globalRoutes');
 const adminRouter = require('./routes/adminRoutes');
+const employeeRouter = require('./routes/employeeRoutes');
 // app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 
 
@@ -19,6 +20,8 @@ app.use(express.json());
 // Middleware to handle multipart/form-data
 const fs = require("fs");
 const path = require("path");
+require('./controllers/employee/markAbsent'); // Load the cron job at startup
+
 
 const uploadsDir = path.join(__dirname, "uploads");
 
@@ -30,6 +33,7 @@ if (!fs.existsSync(uploadsDir)) {
 app.use('/api/users', userRouter);
 app.use('/api/public', globalRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/employee', employeeRouter);
 
 
 // Serve static files from the React app
