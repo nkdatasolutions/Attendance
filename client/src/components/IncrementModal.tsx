@@ -128,7 +128,7 @@ const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="incrementAmt">Increment Amount (%) *</Label>
+            <Label htmlFor="incrementAmt">Increment Amount (₹) *</Label>
             <Input
               id="incrementAmt"
               name="incrementAmt"

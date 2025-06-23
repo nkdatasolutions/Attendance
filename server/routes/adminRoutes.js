@@ -9,7 +9,7 @@ const upload = require("../middlewares/global/Upload");
 adminRouter.post("/employee-add", upload.single("photo"), EmployeeAdd, createEmployee); // ✅ Both are functions
 adminRouter.get("/employee", getAllEmployees);
 adminRouter.get("/employee/:id", getEmployeeById);
-adminRouter.put("/employee-update/:id", updateEmployee);
+adminRouter.put("/employee-update/:id", upload.single("photo"), updateEmployee);
 adminRouter.delete("/employee-drop/:id", deleteEmployee);
 
 module.exports = adminRouter; 

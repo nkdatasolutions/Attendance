@@ -70,17 +70,26 @@ const getEmployeeById = async (req, res) => {
 // ✅ Update employee by ID
 const updateEmployee = async (req, res) => {
     try {
+        const updateData = { ...req.body };
+
+        // If a new photo was uploaded, update photo URL
+        if (req.file) {
+            updateData.photo = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+        }
+
         const updated = await Employee.findOneAndUpdate(
-            { id: req.params.id },   // 🔧 FIXED
-            req.body,
+            { id: req.params.id },
+            updateData,
             {
                 new: true,
                 runValidators: true,
             }
         );
+
         if (!updated) {
             return res.status(404).json({ error: "Employee not found" });
         }
+
         res.status(200).json(updated);
     } catch (err) {
         res.status(400).json({ error: err.message });

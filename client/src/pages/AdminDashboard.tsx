@@ -26,12 +26,14 @@ interface Employee {
 }
 
 interface AttendanceRecord {
-    employeeId: string;
-    checkInTime: string | null;
-    checkOutTime: string | null;
-    status: 'present' | 'absent' | 'checked-out';
-    dailyReport?: string;
+    id: string;
     date: string;
+    prodsts: string;
+    checkin: boolean;
+    checkintime: string | null;
+    checkout: boolean;
+    checkouttime: string | null;
+    absent: boolean;
 }
 
 const AdminDashboard = () => {
@@ -40,6 +42,7 @@ const AdminDashboard = () => {
     const API_URL = import.meta.env.VITE_API_URL;
 
     const [attendanceRecords] = useState<AttendanceRecord[]>([]);
+    // const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
     const [isEditEmployeeModalOpen, setIsEditEmployeeModalOpen] = useState(false);
@@ -113,6 +116,20 @@ const AdminDashboard = () => {
         fetchData();
     }, []);
 
+    const getStatus = (attendance: AttendanceRecord | undefined) => {
+        if (!attendance) return 'absent';
+        if (attendance.absent) return 'absent';
+        if (attendance.checkout) return 'checked-out';
+        if (attendance.checkin) return 'present';
+        return 'absent';
+    };
+
+    const formatTime = (timeString: string | null) => {
+        if (!timeString) return '--:--';
+        const date = new Date(timeString);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
+
     const handleAddEmployee = async (newEmployeeData: FormData) => {
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/employee-add`, {
@@ -130,27 +147,49 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleUpdateEmployee = async (updatedEmployeeData: Partial<Employee>) => {
+    const handleUpdateEmployee = async (updatedEmployeeData: Partial<Employee> & { photo?: File }) => {
         try {
+            const formData = new FormData();
+            for (const key in updatedEmployeeData) {
+                if (updatedEmployeeData[key as keyof typeof updatedEmployeeData]) {
+                    formData.append(key, updatedEmployeeData[key as keyof typeof updatedEmployeeData] as any);
+                }
+            }
+
             const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/employee-update/${updatedEmployeeData.id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updatedEmployeeData),
+                body: formData,
             });
 
-            if (!response.ok) throw new Error('Failed to update employee');
+            if (!response.ok) {
+                const contentType = response.headers.get("content-type");
+                let errorMessage = `Server error (${response.status})`;
+
+                if (contentType && contentType.includes("application/json")) {
+                    const errorData = await response.json();
+                    errorMessage = errorData?.error || errorMessage;
+                } else {
+                    const rawText = await response.text(); // Handle unexpected HTML or text
+                    console.error("Unexpected HTML response:", rawText);
+                }
+
+                throw new Error(errorMessage);
+            }
 
             const updated = await response.json();
             setEmployees(prev => prev.map(emp => emp.id === updated.id ? updated : emp));
-            toast.success('Employee updated successfully');
-            alert('Employee updated successfully');
+            toast.success('✅ Employee updated successfully');
+            alert('✅ Employee updated successfully');
+
         } catch (error) {
-            alert(error);
-            toast.error('Error updating employee');
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            toast.error(`❌ Error updating employee: ${message}`);
+            alert(`❌ Error updating employee: ${message}`);
+            console.error("Update failed:", error);
         }
     };
+
+
 
     const handleDeleteEmployee = async (employeeId: string) => {
         try {
@@ -192,8 +231,8 @@ const AdminDashboard = () => {
         setIsViewEmployeeModalOpen(true);
     };
 
-    const getAttendanceRecord = (employeeId: string) => {
-        return attendanceRecords.find(record => record.employeeId === employeeId);
+    const getAttendanceRecord = (id: string) => {
+        return attendanceData.find(record => record.id === id);
     };
 
     const getStatusBadge = (status: string) => {
@@ -240,6 +279,7 @@ const AdminDashboard = () => {
     const presentEmployees = attendanceData.filter(record => record?.checkin === true).length;
     const checkedOutEmployees = attendanceData.filter(record => record?.checkout === true).length;
     const attendanceRate = Math.round(((presentEmployees) / totalEmployees) * 100);
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
@@ -384,7 +424,7 @@ const AdminDashboard = () => {
                                                 <TableCell className="font-medium">{employee.position}</TableCell>
                                                 <TableCell>
                                                     <div className="max-w-xs">
-                                                        {attendance?.dailyReport ? (
+                                                        {attendance?.date ? (
                                                             <p className="text-sm text-gray-700 truncate" title={attendance.dailyReport}>
                                                                 {attendance.dailyReport}
                                                             </p>
@@ -395,12 +435,12 @@ const AdminDashboard = () => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="text-green-600 font-medium">
-                                                        {attendance?.checkInTime || '--:--'}
+                                                        {attendance?.checkintime ? formatTime(attendance.checkintime) : '--:--'}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="text-blue-600 font-medium">
-                                                        {attendance?.checkOutTime || '--:--'}
+                                                        {attendance?.checkouttime ? formatTime(attendance.checkouttime) : '--:--'}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
