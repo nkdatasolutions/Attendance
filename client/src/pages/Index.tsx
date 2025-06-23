@@ -26,7 +26,7 @@ interface AttendanceRecord {
 const Index = () => {
     const [employeeId, setEmployeeId] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(true);
     const [isCheckingIn, setIsCheckingIn] = useState(true);
     const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendanceRecords);
     const [liveTime, setLiveTime] = useState<string>('');
@@ -278,58 +278,62 @@ const Index = () => {
         setEmployeeId('');
     };
 
-    const handleCheckOutAction = async (checkOut: boolean) => {
+    const handleCheckOutAction = async () => {
         setIsLoading(true);
         setError(null);
 
         try {
-            const response = await axios.put(
-                `${API_URL}/employee/attendance-update/${employeeId}`,
-                {
-                    checkout: checkOut,  // Use the checkIn parameter instead of hardcoded true
-                    // Only include these if you're using them
-                    // insts: checkInData.insts, 
-                    // prodsts: checkInData.prodsts
-                }
-            );
+            // 1. Get attendance status
+            const attendanceRes = await axios.get(`${API_URL}/employee/attendance/${employeeId}`);
+            const attendanceData = attendanceRes.data;
 
-            // Check for successful response
-            if (response.status === 200) {
-                toast.success(`Successfully checked out!`);
-                // onCheckInSuccess?.();
-                return; // Exit after success
+            // 2. Get employee details
+            const employeeRes = await axios.get(`${API_URL}/admin/employee/${employeeId}`);
+            const employeeData = employeeRes.data;
+
+            if (!attendanceData.prodsts || attendanceData.prodsts.trim() === "") {
+                setIsCheckingIn(false); // Indicates checkout
+                setSelectedEmployee(employeeData); // Full employee data
+                setIsModalOpen(true); // Open modal
+            } else {
+                toast.info("Already checked out or work report already submitted.");
             }
-
-            // Handle unexpected successful status codes
-            toast.error(`Unexpected response: ${response.status}`);
-            setError(`Unexpected response: ${response.status}`);
 
         } catch (err) {
+            console.error(err);
             let errorMessage = 'An unexpected error occurred';
-
-            if (axios.isAxiosError(err)) {
-                // Check for network error vs response error
-                if (err.response) {
-                    // The request was made and the server responded with a status code
-                    errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
-                } else if (err.request) {
-                    // The request was made but no response was received
-                    errorMessage = 'No response from server';
-                } else {
-                    // Something happened in setting up the request
-                    errorMessage = err.message;
-                }
-            } else if (err instanceof Error) {
-                errorMessage = err.message;
+            if (axios.isAxiosError(err) && err.response) {
+                errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
             }
-
             setError(errorMessage);
             toast.error(errorMessage);
-
         } finally {
             setIsLoading(false);
         }
     };
+
+
+    const handleConfirmCheckout = async (dailyReport: string) => {
+        setIsLoading(true);
+        try {
+            await axios.put(`${API_URL}/employee/attendance-update/${employeeId}`, {
+                checkout: true,
+                prodsts: dailyReport
+            });
+
+            toast.success("Check-out successful with daily report!");
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            alert(error)
+            toast.error("Failed to update attendance");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
+
 
     const handleQuickCheckOut = async (employeeId: string) => {
         try {
@@ -418,7 +422,7 @@ const Index = () => {
                                         placeholder="Enter your Employee ID (e.g., NK001)"
                                         value={employeeId}
                                         onChange={(e) => setEmployeeId(e.target.value)}
-                                        className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                                        className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl" required
                                     />
                                 </div>
 
@@ -470,13 +474,17 @@ const Index = () => {
                             onCheckOut={handleQuickCheckOut}
                         />
                         {/* Employee Modal */}
-                        <EmployeeModal
-                            employee={selectedEmployee}
-                            isOpen={isModalOpen}
-                            onClose={() => setIsModalOpen(false)}
-                            onConfirm={confirmAttendance}
-                            isCheckingIn={isCheckingIn}
-                        />
+                        {isModalOpen && selectedEmployee && (
+                            <EmployeeModal
+                                employee={selectedEmployee}
+                                isOpen={isModalOpen}
+                                onClose={() => setIsModalOpen(false)}
+                                onConfirm={handleConfirmCheckout}
+                                isCheckingIn={isCheckingIn}
+                            />
+
+                        )}
+
                     </div>
                 </main>
             </div>

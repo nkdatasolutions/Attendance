@@ -27,6 +27,19 @@ const EmployeeModal = ({ employee, isOpen, onClose, onConfirm, isCheckingIn }: E
 
   if (!employee) return null;
 
+  // Get Employee Data 
+  const getEmployeeData = () => {
+    return {
+      id: employee.id,
+      name: employee.name,
+      position: employee.position,
+      department: employee.department,
+      photo: employee.photo,
+      email: employee.email
+    };
+  };
+  
+
   const getIndianTime = () => {
     return new Date().toLocaleTimeString('en-IN', {
       timeZone: 'Asia/Kolkata',
