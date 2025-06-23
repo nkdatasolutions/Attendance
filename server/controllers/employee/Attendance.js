@@ -62,28 +62,46 @@ exports.updateAttendance = async (req, res) => {
     const { id } = req.params;
     const today = moment().format('YYYY-MM-DD');
     const { checkin, checkout, insts, outsts, prodsts } = req.body;
+    console.log("Update Attendance ID:", id);
 
     try {
-        const employeeExists = await Employee.findOne({ id });
-        if (!employeeExists) {
-            return res.status(404).json({ message: 'Employee not found' }); // ✅ 404 Not Found
-        }
+        // const employeeExists = await Employee.findOne({ id });
+        // if (!employeeExists) {
+        //     return res.status(404).json({ message: 'Employee not found' }); // ✅ 404 Not Found
+        // }
 
         const attendance = await Attendance.findOne({ id, date: today });
         if (!attendance) {
             return res.status(404).json({ message: "Attendance not found for today." }); // ✅ 404 Not Found
         }
 
+        const now = new Date();
+
         if (checkin) {
             attendance.checkin = true;
             attendance.insts = insts || attendance.insts;
             attendance.absent = false;
+
+            // Only set check-in time if it's not already set
+            if (!attendance.checkintime) {
+                attendance.checkintime = now;
+            }
         }
 
         if (checkout) {
+            // Prevent checkout if checkin hasn't happened
+            if (!attendance.checkin || !attendance.checkintime) {
+                return res.status(400).json({ message: "Cannot check out before checking in." });
+            }
+
             attendance.checkout = true;
             attendance.outsts = outsts || attendance.outsts;
+
+            if (!attendance.checkouttime) {
+                attendance.checkouttime = now;
+            }
         }
+
 
         if (prodsts) {
             attendance.prodsts = prodsts;
@@ -190,6 +208,25 @@ exports.getCurrentYearMonthWeekAttendance = async (req, res) => {
             weeklyAttendance
         });
 
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+// Get Single Date Attendance for all employees
+exports.getSingleDateAttendance = async (req, res) => {
+    const { date } = req.params;
+
+    if (!date) {
+        return res.status(400).json({ message: "Date is required" });
+    }
+
+    try {
+        const records = await Attendance.find({ date });
+        if (records.length === 0) {
+            return res.status(404).json({ message: "No attendance records found for this date" });
+        }
+        return res.status(200).json(records);
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

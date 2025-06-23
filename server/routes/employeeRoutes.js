@@ -13,5 +13,6 @@ employeeRouter.put('/attendance-update/:id', AttendanceReq, controller.updateAtt
 employeeRouter.delete('/attendance-drop/:id', controller.deleteAttendance);
 employeeRouter.get('/attendance-range/:id', controller.getAttendanceByDateRange);
 employeeRouter.get('/attendance-byall', controller.getCurrentYearMonthWeekAttendance);
+employeeRouter.get('/attendance-dateall/:date', controller.getSingleDateAttendance);
 
 module.exports = employeeRouter; 

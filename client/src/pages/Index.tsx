@@ -10,6 +10,9 @@ import EmployeeList from '@/components/EmployeeList';
 import { mockEmployees, initialAttendanceRecords, Employee } from '@/data/mockEmployees';
 import { Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface AttendanceRecord {
     employeeId: string;
@@ -30,6 +33,14 @@ const Index = () => {
     const [liveDate, setLiveDate] = useState<string>('');
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [user, setUser] = useState(null);
+    const [employees, setEmployees] = useState([]);
+    const [insts, setInsts] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [checkInData, setCheckInData] = useState<CheckInData>({
+        insts: '',
+        prodsts: ''
+    });
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -43,6 +54,21 @@ const Index = () => {
             }
         }
     }, []);
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            try {
+                const response = await fetch(`${API_URL}/admin/employee`); // Replace with your actual API_URL
+                const data = await response.json();
+                setEmployees(data); // Assuming backend returns an array
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+
+        fetchEmployees();
+    }, []);
+
 
     const getIndianTime = () => {
         return new Date().toLocaleTimeString('en-IN', {
@@ -148,46 +174,58 @@ const Index = () => {
         return '';
     };
 
-    const handleAttendanceAction = (checkIn: boolean) => {
-        if (!employeeId.trim()) {
-            toast.error('Please enter your Employee ID');
-            return;
-        }
+    const handleAttendanceAction = async (checkIn: boolean) => {
+        setIsLoading(true);
+        setError(null);
 
-        const employee = mockEmployees.find(emp => emp.id === employeeId.toUpperCase());
-        if (!employee) {
-            toast.error('Employee not found. Please check your ID.');
-            return;
-        }
+        try {
+            const response = await axios.put(
+                `${API_URL}/employee/attendance-update/${employeeId}`,
+                {
+                    checkin: checkIn,  // Use the checkIn parameter instead of hardcoded true
+                    // Only include these if you're using them
+                    // insts: checkInData.insts,
+                    // prodsts: checkInData.prodsts
+                }
+            );
 
-        const todayDate = getTodayDateString();
-        const existingRecord = attendanceRecords.find(record =>
-            record.employeeId === employee.id && record.date === todayDate
-        );
-
-        if (checkIn) {
-            // Check if check-in time is allowed
-            if (!isCheckInTimeAllowed()) {
-                const timeMessage = getCheckInTimeMessage();
-                toast.error(timeMessage);
-                return;
+            // Check for successful response
+            if (response.status === 200) {
+                toast.success(`Successfully ${checkIn ? 'checked in' : 'checked out'}!`);
+                // onCheckInSuccess?.();
+                return; // Exit after success
             }
 
-            // Check if already checked in today
-            if (existingRecord && (existingRecord.status === 'present' || existingRecord.status === 'checked-out')) {
-                toast.error('You have already checked in today! Only one check-in per day is allowed.');
-                return;
-            }
-        } else {
-            if (!existingRecord || existingRecord.status !== 'present') {
-                toast.error('You need to check in first!');
-                return;
-            }
-        }
+            // Handle unexpected successful status codes
+            toast.error(`Unexpected response: ${response.status}`);
+            setError(`Unexpected response: ${response.status}`);
 
-        setSelectedEmployee(employee);
-        setIsCheckingIn(checkIn);
-        setIsModalOpen(true);
+        } catch (err) {
+            let errorMessage = 'An unexpected error occurred';
+
+            if (axios.isAxiosError(err)) {
+                // Check for network error vs response error
+                if (err.response) {
+                    // The request was made and the server responded with a status code
+                    errorMessage = err.response.data?.message || `Server error: ${err.response}`;
+                    console.error('Error response:', err.response);
+                } else if (err.request) {
+                    // The request was made but no response was received
+                    errorMessage = 'No response from server';
+                } else {
+                    // Something happened in setting up the request
+                    errorMessage = err.message;
+                }
+            } else if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+
+            setError(errorMessage);
+            toast.error(errorMessage);
+
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const confirmAttendance = (dailyReport?: string) => {
@@ -240,12 +278,83 @@ const Index = () => {
         setEmployeeId('');
     };
 
-    const handleQuickCheckOut = (employeeId: string) => {
-        const employee = mockEmployees.find(emp => emp.id === employeeId);
-        if (employee) {
-            setSelectedEmployee(employee);
-            setIsCheckingIn(false);
-            setIsModalOpen(true);
+    const handleCheckOutAction = async (checkOut: boolean) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await axios.put(
+                `${API_URL}/employee/attendance-update/${employeeId}`,
+                {
+                    checkout: checkOut,  // Use the checkIn parameter instead of hardcoded true
+                    // Only include these if you're using them
+                    // insts: checkInData.insts, 
+                    // prodsts: checkInData.prodsts
+                }
+            );
+
+            // Check for successful response
+            if (response.status === 200) {
+                toast.success(`Successfully checked out!`);
+                // onCheckInSuccess?.();
+                return; // Exit after success
+            }
+
+            // Handle unexpected successful status codes
+            toast.error(`Unexpected response: ${response.status}`);
+            setError(`Unexpected response: ${response.status}`);
+
+        } catch (err) {
+            let errorMessage = 'An unexpected error occurred';
+
+            if (axios.isAxiosError(err)) {
+                // Check for network error vs response error
+                if (err.response) {
+                    // The request was made and the server responded with a status code
+                    errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
+                } else if (err.request) {
+                    // The request was made but no response was received
+                    errorMessage = 'No response from server';
+                } else {
+                    // Something happened in setting up the request
+                    errorMessage = err.message;
+                }
+            } else if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+
+            setError(errorMessage);
+            toast.error(errorMessage);
+
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleQuickCheckOut = async (employeeId: string) => {
+        try {
+            const response = await axios.put(
+                `${API_URL}/employee/attendance-update/${employeeId}`,
+                { checkout: true }
+            );
+
+            if (response.status === 200) {
+                toast.success('Successfully checked out!');
+                // Update local state if needed
+                setAttendanceRecords(prev => prev.map(record =>
+                    record.id === employeeId
+                        ? { ...record, checkout: true, checkouttime: new Date().toISOString() }
+                        : record
+                ));
+            }
+        } catch (error) {
+            let errorMessage = 'Failed to check out';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message ||
+                    error.message ||
+                    'Checkout failed';
+            }
+            toast.error(errorMessage);
         }
     };
 
@@ -273,7 +382,7 @@ const Index = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-4 text-gray-600">
-                                <Link to={`${user ? "/admin-dashboard" : "/login"}`} className='bg-purple-400 text-white  px-4 py-2 font-semibold rounded-xl  ' > {user ? user.name : "Sign IN" }</Link>
+                                <Link to={`${user ? "/admin-dashboard" : "/login"}`} className='bg-purple-400 text-white  px-4 py-2 font-semibold rounded-xl  ' > {user ? user.name : "Sign IN"}</Link>
                                 <Clock className="w-5 h-5 text-blue-600" />
                                 <div className="text-right">
                                     <p className="text-lg font-medium">{liveDate}</p>
@@ -336,7 +445,7 @@ const Index = () => {
                                         Check In
                                     </Button>
                                     <Button
-                                        onClick={() => handleAttendanceAction(false)}
+                                        onClick={() => handleCheckOutAction(true)}
                                         className="h-14 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
                                     >
                                         <LogOut className="w-6 h-6 mr-3" />
@@ -357,7 +466,6 @@ const Index = () => {
 
                         {/* Employee List */}
                         <EmployeeList
-                            employees={mockEmployees}
                             attendanceRecords={attendanceRecords}
                             onCheckOut={handleQuickCheckOut}
                         />
