@@ -3,10 +3,14 @@ const moment = require('moment-timezone');
 const Employee = require('../../models/admin/EmployeeAdd');
 const Attendance = require('../../models/employee/Attendance');
 
-// Schedule the job to run at 8:00 AM IST
-cron.schedule('0 8 * * *', async () => {
+// console.log("[Cron] markAbsent.js loaded");
+console.log("[Cron] Scheduling job...");
+console.log(`[Cron] Running now:`, moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'));
+
+cron.schedule('52 11 * * *', async () => {
     const today = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
     console.log(`[Cron] Marking absent entries at ${today} 8:00 AM IST`);
+    console.log(`[Cron] Running now:`, moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'));
 
     try {
         const employees = await Employee.find();
@@ -18,8 +22,7 @@ cron.schedule('0 8 * * *', async () => {
                     id: emp.id,
                     date: today,
                     checkin: false,
-                    insts: "Absent",
-                    prodsts: "No activity"
+                    checkout: false,
                 });
             }
         }

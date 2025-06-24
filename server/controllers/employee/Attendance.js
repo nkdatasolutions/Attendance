@@ -14,9 +14,19 @@ exports.createAttendance = async (req, res) => {
         }
 
         const existing = await Attendance.findOne({ id, date: today });
+
         if (existing) {
-            return res.status(409).json({ message: "Attendance already exists for today", data: existing }); // ✅ 409 Conflict
+            const isEmpty = !existing.checkin && !existing.checkout && !existing.checkintime && !existing.checkouttime;
+
+            if (!isEmpty) {
+                return res.status(409).json({ message: "Attendance already exists for today", data: existing });
+            }
+
+            // optionally update the shell record instead of creating a new one
+            await Attendance.updateOne({ _id: existing._id }, { ...req.body });
+            return res.status(200).json({ message: "Attendance updated", data: req.body });
         }
+
 
         const newRecord = await Attendance.create({
             id,
@@ -57,6 +67,32 @@ exports.getAttendanceById = async (req, res) => {
     }
 };
 
+// GET attendance by employee ID and date
+exports.getAttendanceByEmployeeIdAndDate = async (req, res) => {
+    const { id } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+        return res.status(400).json({ message: "Date is required" }); // ✅ 400 Bad Request
+    }
+
+    try {
+        const employeeExists = await Employee.findOne({ id });
+        if (!employeeExists) {
+            return res.status(404).json({ message: 'Employee not found' }); // ✅ 404 Not Found
+        }
+
+        const attendance = await Attendance.findOne({ id, date });
+        if (!attendance) {
+            return res.status(404).json({ message: "Attendance not found for this date" }); // ✅ 404 Not Found
+        }
+
+        return res.status(200).json(attendance); // ✅ 200 OK
+    } catch (error) {
+        return res.status(500).json({ error: error.message }); // ✅ 500 Internal Server Error
+    }
+}
+
 // UPDATE attendance (check-in / check-out)
 exports.updateAttendance = async (req, res) => {
     const { id } = req.params;
@@ -65,10 +101,10 @@ exports.updateAttendance = async (req, res) => {
     console.log("Update Attendance ID:", id);
 
     try {
-        // const employeeExists = await Employee.findOne({ id });
-        // if (!employeeExists) {
-        //     return res.status(404).json({ message: 'Employee not found' }); // ✅ 404 Not Found
-        // }
+        const employeeExists = await Employee.findOne({ id });
+        if (!employeeExists) {
+            return res.status(404).json({ message: 'Employee not found' }); // ✅ 404 Not Found
+        }
 
         const attendance = await Attendance.findOne({ id, date: today });
         if (!attendance) {
@@ -77,38 +113,44 @@ exports.updateAttendance = async (req, res) => {
 
         const now = new Date();
 
-        if (checkin) {
-            attendance.checkin = true;
-            attendance.insts = insts || attendance.insts;
-            attendance.absent = false;
+        if (!employeeExists || !attendance) {
+            return res.status(404).json({ message: "Employee or attendance record not found." }); // ✅ 404 Not Found
+        } else {
 
-            // Only set check-in time if it's not already set
-            if (!attendance.checkintime) {
-                attendance.checkintime = now;
+
+            if (checkin) {
+                attendance.checkin = true;
+                attendance.insts = insts || attendance.insts;
+                attendance.absent = false;
+
+                // Only set check-in time if it's not already set
+                if (!attendance.checkintime) {
+                    attendance.checkintime = now;
+                }
             }
-        }
 
-        if (checkout) {
-            // Prevent checkout if checkin hasn't happened
-            if (!attendance.checkin || !attendance.checkintime) {
-                return res.status(400).json({ message: "Cannot check out before checking in." });
+            if (checkout) {
+                // Prevent checkout if checkin hasn't happened
+                if (!attendance.checkin || !attendance.checkintime) {
+                    return res.status(400).json({ message: "Cannot check out before checking in." });
+                }
+
+                attendance.checkout = true;
+                attendance.outsts = outsts || attendance.outsts;
+
+                if (!attendance.checkouttime) {
+                    attendance.checkouttime = now;
+                }
             }
 
-            attendance.checkout = true;
-            attendance.outsts = outsts || attendance.outsts;
 
-            if (!attendance.checkouttime) {
-                attendance.checkouttime = now;
+            if (prodsts) {
+                attendance.prodsts = prodsts;
             }
+
+            await attendance.save();
+            return res.status(200).json(attendance); // ✅ 200 OK
         }
-
-
-        if (prodsts) {
-            attendance.prodsts = prodsts;
-        }
-
-        await attendance.save();
-        return res.status(200).json(attendance); // ✅ 200 OK
     } catch (error) {
         return res.status(500).json({ error: error.message }); // ✅ 500 Internal Server Error
     }
@@ -120,10 +162,10 @@ exports.deleteAttendance = async (req, res) => {
     const today = req.query.date || moment().format('YYYY-MM-DD');
 
     try {
-        const employeeExists = await Employee.findOne({ id });
-        if (!employeeExists) {
-            return res.status(404).json({ message: 'Employee not found' }); // ✅ 404 Not Found
-        }
+        // const employeeExists = await Employee.findOne({ id });
+        // if (!employeeExists) {
+        //     return res.status(404).json({ message: 'Employee not found' }); // ✅ 404 Not Found
+        // }
 
         const deleted = await Attendance.findOneAndDelete({ id, date: today });
         if (!deleted) {

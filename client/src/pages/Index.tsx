@@ -41,6 +41,7 @@ const Index = () => {
         insts: '',
         prodsts: ''
     });
+    const [todayAttendance, setTodayAttendance] = useState<any>(null);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -155,6 +156,16 @@ const Index = () => {
             day: '2-digit'
         });
     };
+
+    const getTodayDateStringReverse = () => {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
+        const year = now.getFullYear();
+
+        return `${year}-${month}-${day}`; // ✅ dd-mm-yyyy format
+    };
+
 
     const getCurrentIndianHour = () => {
         const now = new Date();
@@ -290,8 +301,9 @@ const Index = () => {
 
         try {
             // 1. Get attendance status
-            const attendanceRes = await axios.get(`${API_URL}/employee/attendance/${employeeId}`);
+            const attendanceRes = await axios.get(`${API_URL}/employee/attendance-employee/${employeeId}?date=${getTodayDateStringReverse()}`);
             const attendanceData = attendanceRes.data;
+            // setTodayAttendance(attendanceData);
 
             // 2. Get employee details
             const employeeRes = await axios.get(`${API_URL}/admin/employee/${employeeId}`);
@@ -368,7 +380,37 @@ const Index = () => {
         }
     };
 
-    const checkInAllowed = isCheckInTimeAllowed();
+    const isWithinCheckInTime = isCheckInTimeAllowed();
+
+    useEffect(() => {
+        if (employeeId) {
+            const fetchAttendance = async () => {
+                try {
+                    const res = await axios.get(`${API_URL}/employee/attendance-employee/${employeeId}?date=${getTodayDateStringReverse()}`);
+                    setTodayAttendance(res.data);
+                    console.log("Today's Attendance:", res.data);
+                } catch (err) {
+                    setTodayAttendance(null);
+                    console.error("Failed to fetch attendance", err);
+                }
+            };
+            fetchAttendance();
+        }
+    }, [employeeId]);
+
+
+
+    // const isWithinCheckInTime = isCheckInTimeAllowed();
+
+    const checkInAllowed =
+        isWithinCheckInTime &&
+        todayAttendance?.checkin !== true; // allow check-in only if not yet checked in
+
+    const checkOutAllowed =
+        todayAttendance?.checkin === true && (todayAttendance?.checkout === false);
+
+    // alert(checkOutAllowed);
+
     const timeMessage = getCheckInTimeMessage();
 
     return (
@@ -424,23 +466,32 @@ const Index = () => {
                             <CardContent className="p-8 space-y-6">
                                 <div className="relative">
                                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                    <Input
-                                        placeholder="Enter your Employee ID (e.g., NK001)"
+                                    <select
                                         value={employeeId}
                                         onChange={(e) => setEmployeeId(e.target.value)}
-                                        className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl" required
-                                    />
+                                        className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl w-full"
+                                        required
+                                    >
+                                        <option value="">Select Employee ID</option>
+                                        {employees.map((emp: any) => (
+                                            <option key={emp.id} value={emp.id}>
+                                                {emp.id.toUpperCase()} - {emp.name}
+                                            </option>
+
+                                        ))}
+                                    </select>
                                 </div>
 
+
                                 {/* Time Restriction Notice */}
-                                {!checkInAllowed && (
+                                {/* {!checkInAllowed && (
                                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
                                         <p className="text-yellow-800 text-sm font-medium text-center">
                                             <Clock className="w-4 h-4 inline mr-2" />
                                             {timeMessage}
                                         </p>
                                     </div>
-                                )}
+                                )} */}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <Button
@@ -454,13 +505,19 @@ const Index = () => {
                                         <LogIn className="w-6 h-6 mr-3" />
                                         Check In
                                     </Button>
+
                                     <Button
                                         onClick={() => handleCheckOutAction(true)}
-                                        className="h-14 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
+                                        disabled={!checkOutAllowed}
+                                        className={`h-14 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all ${checkOutAllowed
+                                            ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+                                            : 'bg-gray-400 cursor-not-allowed'
+                                            }`}
                                     >
                                         <LogOut className="w-6 h-6 mr-3" />
                                         Check Out
                                     </Button>
+
                                 </div>
 
                                 <div className="text-center p-4 bg-gray-50 rounded-xl space-y-2">

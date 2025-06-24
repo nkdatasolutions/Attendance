@@ -45,6 +45,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
 
     useEffect(() => {
         const fetchData = async () => {
+            // alert(getTodayDateString());
             try {
                 setLoading(true);
                 setError(null);
@@ -52,7 +53,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
                 // Fetch attendance data
                 const attendanceResponse = await fetch(`${API_URL}/employee/attendance-dateall/${getTodayDateString()}`);
                 if (!attendanceResponse.ok) {
-                    throw new Error('Failed to fetch attendance data');
+                    throw new Error('Still now no one has checked in today');
                 }
                 const attendanceJson = await attendanceResponse.json();
                 const attendanceArray = Array.isArray(attendanceJson) ? attendanceJson : [attendanceJson];
@@ -154,7 +155,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
                                             </div>
                                             <div className="flex items-center text-gray-500 text-sm">
                                                 <MapPin className="w-4 h-4 mr-1" />
-                                                {employee.experience}
+                                                {employee.id}
                                             </div>
                                         </div>
                                     </div>

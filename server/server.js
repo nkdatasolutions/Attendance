@@ -21,6 +21,7 @@ app.use(express.json());
 const fs = require("fs");
 const path = require("path");
 require('./controllers/employee/markAbsent'); // Load the cron job at startup
+console.log('[Cron] markAbsent.js loaded');
 
 
 const uploadsDir = path.join(__dirname, "uploads");

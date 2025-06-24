@@ -9,6 +9,7 @@ const employeeRouter = express.Router();
 employeeRouter.post('/attendance', AttendanceReq, controller.createAttendance);
 employeeRouter.get('/attendance-all', controller.getAllAttendance);
 employeeRouter.get('/attendance/:id', controller.getAttendanceById);
+employeeRouter.get('/attendance-employee/:id', controller.getAttendanceByEmployeeIdAndDate);
 employeeRouter.put('/attendance-update/:id', AttendanceReq, controller.updateAttendance);
 employeeRouter.delete('/attendance-drop/:id', controller.deleteAttendance);
 employeeRouter.get('/attendance-range/:id', controller.getAttendanceByDateRange);
