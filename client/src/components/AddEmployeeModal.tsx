@@ -79,7 +79,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
                 }
             );
 
-            console.log('Success:', response.data);
+            // console.log('Success:', response.data);
             alert("Employee added successfully!");
             onClose();
         } catch (error) {
@@ -91,7 +91,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
                 "Unknown error occurred";
 
             alert(`Error posting employee:\n${message}`);
-            console.error("Detailed error:", error);
+            // console.error("Detailed error:", error);
         }
     };
 

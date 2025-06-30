@@ -21,7 +21,7 @@ app.use(express.json());
 const fs = require("fs");
 const path = require("path");
 require('./controllers/employee/markAbsent'); // Load the cron job at startup
-console.log('[Cron] markAbsent.js loaded');
+// console.log('[Cron] markAbsent.js loaded');
 
 
 const uploadsDir = path.join(__dirname, "uploads");
@@ -48,6 +48,6 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  // console.log(`Server running on port ${PORT}`);
 });
  

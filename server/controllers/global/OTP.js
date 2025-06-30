@@ -24,7 +24,7 @@ exports.sendOtpToEmail = async (req, res) => {
 
         res.status(200).json({ message: 'OTP sent to email' });
     } catch (error) {
-        console.error('Error sending OTP:', error);
+        // console.error('Error sending OTP:', error);
         res.status(500).json({ message: 'Failed to send OTP' });
     }
 };
@@ -53,7 +53,7 @@ exports.verifyOtp = async (req, res) => {
 
         res.status(200).json({ message: 'OTP verified' });
     } catch (error) {
-        console.error('OTP Verification Error:', error);
+        // console.error('OTP Verification Error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -93,7 +93,7 @@ exports.verifyHashedOtp = async (req, res) => {
 
         sendToken(user, 201, res);
     } catch (error) {
-        console.error('OTP Verification Error:', error);
+        // console.error('OTP Verification Error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -133,7 +133,7 @@ exports.verifyOtpAndRegister = async (req, res) => {
         // Send token response
         sendToken(user, 201, res);
     } catch (error) {
-        console.error('Error in verifyOtpAndRegister:', error);
+        // console.error('Error in verifyOtpAndRegister:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

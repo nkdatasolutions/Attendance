@@ -50,7 +50,7 @@ const Index = () => {
                 const decoded = jwtDecode(token);
                 setUser(decoded);
             } catch (err) {
-                console.error("Invalid token", err);
+                // console.error("Invalid token", err);
                 localStorage.removeItem('token'); // optional: clean up
             }
         }
@@ -63,7 +63,7 @@ const Index = () => {
                 const data = await response.json();
                 setEmployees(data); // Assuming backend returns an array
             } catch (error) {
-                console.error("Error fetching employees:", error);
+                // console.error("Error fetching employees:", error);
             }
         };
 
@@ -114,7 +114,7 @@ const Index = () => {
             setLiveTime(timeString);
             setLiveDate(dateString);
         } catch (error) {
-            console.warn('WorldTimeAPI failed, falling back to local time.', error?.message || error);
+            // console.warn('WorldTimeAPI failed, falling back to local time.', error?.message || error);
 
             // Fallback: Use local time with timeZone override
             const fallbackDateTime = new Date();
@@ -225,7 +225,7 @@ const Index = () => {
                 if (err.response) {
                     // The request was made and the server responded with a status code
                     errorMessage = err.response.data?.message || `Server error: ${err.response}`;
-                    console.error('Error response:', err.response);
+                    // console.error('Error response:', err.response);
                 } else if (err.request) {
                     // The request was made but no response was received
                     errorMessage = 'No response from server';
@@ -318,7 +318,7 @@ const Index = () => {
             }
 
         } catch (err) {
-            console.error(err);
+            // console.error(err);
             let errorMessage = 'An unexpected error occurred';
             if (axios.isAxiosError(err) && err.response) {
                 errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
@@ -342,7 +342,7 @@ const Index = () => {
             toast.success("Check-out successful with daily report!");
             setIsModalOpen(false);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             alert(error)
             toast.error("Failed to update attendance");
         } finally {
@@ -388,10 +388,10 @@ const Index = () => {
                 try {
                     const res = await axios.get(`${API_URL}/employee/attendance-employee/${employeeId}?date=${getTodayDateStringReverse()}`);
                     setTodayAttendance(res.data);
-                    console.log("Today's Attendance:", res.data);
+                    // console.log("Today's Attendance:", res.data);
                 } catch (err) {
                     setTodayAttendance(null);
-                    console.error("Failed to fetch attendance", err);
+                    // console.error("Failed to fetch attendance", err);
                 }
             };
             fetchAttendance();
@@ -483,15 +483,7 @@ const Index = () => {
                                 </div>
 
 
-                                {/* Time Restriction Notice */}
-                                {/* {!checkInAllowed && (
-                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                                        <p className="text-yellow-800 text-sm font-medium text-center">
-                                            <Clock className="w-4 h-4 inline mr-2" />
-                                            {timeMessage}
-                                        </p>
-                                    </div>
-                                )} */}
+                                
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <Button
@@ -519,6 +511,16 @@ const Index = () => {
                                     </Button>
 
                                 </div>
+
+                                {/* Time Restriction Notice */}
+                                {!checkInAllowed && (
+                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                                        <p className="text-yellow-800 text-sm font-medium text-center">
+                                            <Clock className="w-4 h-4 inline mr-2" />
+                                            {timeMessage}
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="text-center p-4 bg-gray-50 rounded-xl space-y-2">
                                     <p className="text-sm text-gray-600">

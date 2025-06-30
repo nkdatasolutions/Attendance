@@ -45,36 +45,25 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            // alert(getTodayDateString());
             try {
                 setLoading(true);
                 setError(null);
 
-                // Fetch attendance data
                 const attendanceResponse = await fetch(`${API_URL}/employee/attendance-dateall/${getTodayDateString()}`);
-                if (!attendanceResponse.ok) {
-                    throw new Error('Still now no one has checked in today');
-                }
-                const attendanceJson = await attendanceResponse.json();
-                const attendanceArray = Array.isArray(attendanceJson) ? attendanceJson : [attendanceJson];
+                if (!attendanceResponse.ok) throw new Error('No one has checked in today');
 
+                const attendanceData = await attendanceResponse.json();
+                const attendanceArray = Array.isArray(attendanceData) ? attendanceData : [attendanceData];
                 setAttendanceData(attendanceArray);
-                console.log('Attendance Data:', attendanceArray);
-                // Extract employee IDs from attendance data
-                const employeeIds = Array.isArray(attendanceJson)
-                    ? attendanceJson.map(item => item.id)
-                    : [attendanceJson.id];
 
-                // Fetch employee data for all employees in attendance
-                const employeePromises = employeeIds.map(id =>
-                    fetch(`${API_URL}/admin/employee/${id}`).then(res => res.json())
-                );
-                const employees = await Promise.all(employeePromises);
-                setEmployeeData(employees);
-                console.log('Employee Data:', employees);
-
+                const employeeIds = attendanceArray.map(item => item.id);
+                const employeeResponses = await Promise.all(employeeIds.map(id =>
+                    fetch(`${API_URL}/admin/employee/${id}`).then(r => r.json())
+                ));
+                setEmployeeData(employeeResponses);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch data');
+                // console.error('Fetch failed:', err);
+                setError(err.message || 'Unexpected error');
             } finally {
                 setLoading(false);
             }
@@ -82,6 +71,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
 
         fetchData();
     }, []);
+
 
     const getStatus = (attendance: AttendanceRecord | undefined) => {
         if (!attendance) return 'absent';
@@ -102,15 +92,33 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
     const formatTime = (timeString: string | null) => {
         if (!timeString) return '--:--';
         const date = new Date(timeString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit',hour12: true });
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
     };
 
     if (loading) {
-        return <div className="text-center py-8">Loading...</div>;
+        return (
+            <div className="flex flex-col max-w-sm mx-auto items-center justify-center py-16 text-pink-500">
+                <div className="text-5xl animate-spin-slow">🌸</div>
+                <p className="mt-4 text-lg font-semibold">Loading, please wait...</p>
+            </div>
+        );
     }
 
+
+
     if (error) {
-        return <div className="text-center py-8 text-red-500">{error}</div>;
+
+        if (error === 'No one has checked in today') {
+            return (
+                <div className="max-w-sm mx-auto mt-12 p-6 bg-pink-50 border border-pink-200 rounded-2xl shadow-lg text-center">
+                    <div className="text-5xl mb-4 animate-bounce">😴</div>
+                    <h2 className="text-xl font-bold text-pink-600">No one has checked in today</h2>
+                    <p className="text-sm text-pink-500 mt-2">Waiting for the first early bird 🐦</p>
+                </div>
+            )
+        } else {
+            return <div className="text-center py-8 text-red-500">{error}</div>;
+        }
     }
 
     if (employeeData.length === 0) {

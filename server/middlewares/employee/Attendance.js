@@ -19,7 +19,7 @@ const AttendanceReq = async (req, res, next) => {
 
         next();
     } catch (error) {
-        console.error("Middleware error:", error);
+        // console.error("Middleware error:", error);
         res.status(500).json({ message: "Server error during daily attendance check." });
     }
 };

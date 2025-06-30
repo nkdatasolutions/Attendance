@@ -56,7 +56,7 @@ exports.registerUser = async (req, res) => {
         // Send token response
         sendToken(user, 201, res);
     } catch (error) {
-        console.error('Error in registerUser:', error);
+        // console.error('Error in registerUser:', error);
         res.status(500).json({
             message: 'Internal server error',
             error: error.message,
@@ -108,7 +108,7 @@ exports.tempRegisterUser = async (req, res) => {
 
         res.status(201).json({ message: "Registered temporarily. Please verify OTP.", userData: { name, email, username } });
     } catch (err) {
-        console.error("Temp Register Error:", err);
+        // console.error("Temp Register Error:", err);
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -166,8 +166,8 @@ exports.signinUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        console.log('Incoming password:', password);
-        console.log('Stored hashed password:', user.password);
+        // console.log('Incoming password:', password);
+        // console.log('Stored hashed password:', user.password);
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
@@ -176,7 +176,7 @@ exports.signinUser = async (req, res) => {
 
         sendToken(user, 200, res);
     } catch (error) {
-        console.error('Error in signinUser:', error);
+        // console.error('Error in signinUser:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -196,7 +196,7 @@ exports.getUserNameByEmail = async (req, res) => {
         // Return the user's name
         res.status(200).json({ name: user.name });
     } catch (error) {
-        console.error('Error in getUserNameByEmail:', error);
+        // console.error('Error in getUserNameByEmail:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -226,7 +226,7 @@ exports.checkUserExistence = async (req, res) => {
             return res.status(404).json({ exists: false, message: "User not found" });
         }
     } catch (error) {
-        console.error('Error in checkUserExistence:', error);
+        // console.error('Error in checkUserExistence:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -265,7 +265,7 @@ exports.initiateRegistration = async (req, res) => {
             userData: { name, email, phoneNo, username, password } // frontend will use this
         });
     } catch (error) {
-        console.error('Error in initiateRegistration:', error);
+        // console.error('Error in initiateRegistration:', error);
         res.status(500).json({ message: 'Failed to initiate registration' });
     }
 };

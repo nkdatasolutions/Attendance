@@ -98,7 +98,7 @@ exports.updateAttendance = async (req, res) => {
     const { id } = req.params;
     const today = moment().format('YYYY-MM-DD');
     const { checkin, checkout, insts, outsts, prodsts } = req.body;
-    console.log("Update Attendance ID:", id);
+    // console.log("Update Attendance ID:", id);
 
     try {
         const employeeExists = await Employee.findOne({ id });
@@ -183,9 +183,9 @@ exports.getAttendanceByDateRange = async (req, res) => {
     const { id } = req.params;
     const { startDate, endDate } = req.query;
 
-    console.log("ID:", id);
-    console.log("startDate:", startDate);
-    console.log("endDate:", endDate);
+    // console.log("ID:", id);
+    // console.log("startDate:", startDate);
+    // console.log("endDate:", endDate);
 
     try {
         const employeeExists = await Employee.findOne({ id });

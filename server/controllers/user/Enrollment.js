@@ -48,7 +48,7 @@ exports.postEnrollment = async (req, res) => {
         res.status(201).json({ message: 'Enrollment request submitted successfully', enrollment });
 
     } catch (error) {
-        console.error('Error in postEnrollment:', error);
+        // console.error('Error in postEnrollment:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -58,7 +58,7 @@ exports.getEnrollment = async (req, res) => {
         const enrollments = await Enrollment.find({});
         res.status(200).json(enrollments);
     } catch (error) {
-        console.error('Error in getEnrollment:', error);
+        // console.error('Error in getEnrollment:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 }
@@ -72,7 +72,7 @@ exports.deleteEnrollment = async (req, res) => {
         }
         res.status(200).json({ message: 'Enrollment deleted successfully', enrollment }); 
     } catch (error) {
-        console.error('Error in deleteEnrollment:', error);
+        // console.error('Error in deleteEnrollment:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 }
@@ -87,7 +87,7 @@ exports.updateEnrollment = async (req, res) => {
         }
         res.status(200).json({ message: 'Enrollment updated successfully', enrollment });
     } catch (error) {
-        console.error('Error in updateEnrollment:', error);
+        // console.error('Error in updateEnrollment:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 }
@@ -101,7 +101,7 @@ exports.getEnrollmentByEmail = async (req, res) => {
         }
         res.status(200).json(enrollment);
     } catch (error) {
-        console.error('Error in getEnrollmentByEmail:', error);
+        // console.error('Error in getEnrollmentByEmail:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 }

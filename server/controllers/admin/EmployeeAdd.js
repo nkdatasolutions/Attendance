@@ -32,7 +32,7 @@ const createEmployee = async (req, res) => {
         const saved = await newEmployee.save();
         res.status(201).json(saved);
     } catch (err) {
-        console.error("Error creating employee:", err);
+        // console.error("Error creating employee:", err);
 
         // Send back all errors, and used seq if available
         res.status(400).json({

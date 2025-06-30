@@ -88,7 +88,7 @@ const IncrementModal = ({ isOpen, onClose, employee }: IncrementModalProps) => {
         toast.error('Failed to update employee increment. Please try again.');
       }
     } catch (error: any) {
-      console.error(error);
+      // console.error(error);
       if (axios.isAxiosError(error) && error.response) {
         toast.error(error.response.data?.message || 'Server error occurred.');
       } else {

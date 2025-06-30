@@ -94,7 +94,7 @@ const AdminDashboard = () => {
                 const attendanceArray = Array.isArray(attendanceJson) ? attendanceJson : [attendanceJson];
 
                 setAttendanceData(attendanceArray);
-                console.log('Attendance Data:', attendanceArray);
+                // console.log('Attendance Data:', attendanceArray);
                 // Extract employee IDs from attendance data
                 const employeeIds = Array.isArray(attendanceJson)
                     ? attendanceJson.map(item => item.id)
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
                 );
                 const employees = await Promise.all(employeePromises);
                 setEmployeeData(employees);
-                console.log('Employee Data:', employees);
+                // console.log('Employee Data:', employees);
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -144,7 +144,7 @@ const AdminDashboard = () => {
             setEmployees(prev => [...prev, newEmployee]);
             toast.success('Employee added successfully');
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             toast.error('Error adding employee');
         }
     };
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
                     errorMessage = errorData?.error || errorMessage;
                 } else {
                     const rawText = await response.text(); // Handle unexpected HTML or text
-                    console.error("Unexpected HTML response:", rawText);
+                    // console.error("Unexpected HTML response:", rawText);
                 }
 
                 throw new Error(errorMessage);
@@ -187,7 +187,7 @@ const AdminDashboard = () => {
             const message = error instanceof Error ? error.message : 'Unknown error';
             toast.error(`❌ Error updating employee: ${message}`);
             alert(`❌ Error updating employee: ${message}`);
-            console.error("Update failed:", error);
+            // console.error("Update failed:", error);
         }
     };
 
@@ -204,7 +204,7 @@ const AdminDashboard = () => {
             setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
             toast.success('Employee deleted successfully');
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             toast.error('Error deleting employee');
         }
     };

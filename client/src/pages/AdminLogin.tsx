@@ -40,7 +40,7 @@ const AdminLogin = () => {
             }
         } catch (error) {
             toast.error('Server error. Please try again later.');
-            console.error('Login error:', error);
+            // console.error('Login error:', error);
         }
     };
 
