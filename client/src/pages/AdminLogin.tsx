@@ -32,7 +32,7 @@ const AdminLogin = () => {
                 const token = data.token;
                 localStorage.setItem("token", token);
                 const decoded = jwtDecode(token);
-                localStorage.setItem('token', 'true');
+                // localStorage.setItem('token', 'true');
                 toast.success('Login successful!');
                 navigate('/admin-dashboard');
             } else {

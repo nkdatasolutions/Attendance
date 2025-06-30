@@ -211,7 +211,7 @@ const AdminDashboard = () => {
 
 
     useEffect(() => {
-        const isAuthenticated = localStorage.getItem('adminAuthenticated');
+        const isAuthenticated = localStorage.getItem('token');
         if (!isAuthenticated) {
             navigate('/loginadmin');
         }
