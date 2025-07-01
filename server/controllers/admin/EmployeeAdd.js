@@ -2,16 +2,28 @@ const Employee = require("../../models/admin/EmployeeAdd");
 const Attendance = require("../../models/employee/Attendance");
 const Counter = require("../global/Counter");
 const mongoose = require('mongoose');
+const cloudinary = require("../../config/cloudinaryConfig");
+const fs = require("fs");
 
 // ✅ Create a new employee
 const createEmployee = async (req, res) => {
-    let counter = null; // declare here to access even in catch
+    let counter = null;
 
     try {
-        const photoPath = req.file ? req.file.path : null;
-        const photoUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : null;
+        let photoUrl = null;
 
-        // Step 1: Safely increment the counter
+        // Step 1: Upload to Cloudinary if file exists
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "employee_photos"
+            });
+            photoUrl = result.secure_url;
+
+            // Delete temp file after upload
+            fs.unlinkSync(req.file.path);
+        }
+
+        // Step 2: Safely increment the counter
         counter = await Counter.findOneAndUpdate(
             { id: "employeeId" },
             { $inc: { seq: 1 } },
@@ -21,20 +33,17 @@ const createEmployee = async (req, res) => {
         const paddedId = String(counter.seq).padStart(3, "0");
         const id = `nk${paddedId}`;
 
-        // Step 2: Create employee
+        // Step 3: Create and save employee
         const newEmployee = new Employee({
             ...req.body,
             id,
-            photo: photoUrl,
+            photo: photoUrl, // Use Cloudinary URL
         });
 
-        // Step 3: Save to DB
         const saved = await newEmployee.save();
         res.status(201).json(saved);
-    } catch (err) {
-        // console.error("Error creating employee:", err);
 
-        // Send back all errors, and used seq if available
+    } catch (err) {
         res.status(400).json({
             error: err.message,
             ...(err.errors && { validationErrors: err.errors }),

@@ -156,7 +156,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <h3 className="font-bold text-gray-900 text-lg">{employee.name}</h3>
+                                            <h3 className="font-bold text-gray-900 text-lg">{employee.photo}</h3>
                                             <div className="flex items-center text-gray-600 text-sm">
                                                 <User className="w-4 h-4 mr-1" />
                                                 {employee.position}

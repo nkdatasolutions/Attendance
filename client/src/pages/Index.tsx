@@ -88,63 +88,32 @@ const Index = () => {
 
     const fetchLiveTime = async () => {
         try {
-            const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
+            const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata');
 
-            // Check for rate limit or other bad responses
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
-            const dateTime = new Date(data.datetime);
 
-            const timeString = dateTime.toLocaleTimeString('en-IN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
+            // Format time
+            const timeString = `${data.hour.toString().padStart(2, '0')}:${data.minute.toString().padStart(2, '0')}:${data.seconds.toString().padStart(2, '0')}`;
 
-            const dateString = dateTime.toLocaleDateString('en-IN', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+            // Format date
+            const dateString = `${data.day}/${data.month}/${data.year}`;
 
             setLiveTime(timeString);
             setLiveDate(dateString);
         } catch (error) {
-            // console.warn('WorldTimeAPI failed, falling back to local time.', error?.message || error);
-
-            // Fallback: Use local time with timeZone override
-            const fallbackDateTime = new Date();
-
-            const fallbackTime = fallbackDateTime.toLocaleTimeString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
-
-            const fallbackDate = fallbackDateTime.toLocaleDateString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-
-            setLiveTime(fallbackTime);
-            setLiveDate(fallbackDate);
+            console.error('Failed to fetch live time:', error);
         }
     };
 
 
     useEffect(() => {
-        fetchLiveTime(); // Initial fetch
-        const intervalId = setInterval(fetchLiveTime, 1000); // Update every second
-
-        return () => clearInterval(intervalId); // Cleanup
+        fetchLiveTime();
+        const interval = setInterval(fetchLiveTime, 10000); // update every 10 seconds
+        return () => clearInterval(interval);
     }, []);
 
 
@@ -483,7 +452,7 @@ const Index = () => {
                                 </div>
 
 
-                                
+
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <Button

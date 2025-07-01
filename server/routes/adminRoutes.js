@@ -3,7 +3,7 @@ const adminRouter = express.Router();
 
 const { EmployeeAdd } = require('../middlewares/admin/EmployeeAdd');
 const { createEmployee, deleteEmployee, getAllEmployees, getEmployeeById, updateEmployee } = require('../controllers/admin/EmployeeAdd');
-const upload = require("../middlewares/global/Upload");
+const upload = require("../middlewares/global/uploadMiddleware");
 
 // Registration route
 adminRouter.post("/employee-add", upload.single("photo"), EmployeeAdd, createEmployee); // ✅ Both are functions

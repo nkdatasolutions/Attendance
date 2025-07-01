@@ -38,7 +38,7 @@ app.use('/api/employee', employeeRouter);
 
 
 // Serve static files from the React app
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Error handling for undefined routes
 app.use((req, res) => {
