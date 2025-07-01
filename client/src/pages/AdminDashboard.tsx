@@ -14,6 +14,7 @@ import ViewEmployeeModal from '@/components/ViewEmployeeModal';
 import axios from 'axios';
 import { utils, writeFile } from 'xlsx';
 import { saveAs } from 'file-saver';
+// import axios from 'axios';
 
 // Updated AttendanceRecord interface to include dailyReport
 
@@ -55,6 +56,39 @@ const AdminDashboard = () => {
     const [employeeData, setEmployeeData] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [seqFormOpen, setSeqFormOpen] = useState(false);
+    const [currentSeq, setCurrentSeq] = useState(null);
+    const [newSeq, setNewSeq] = useState('');
+
+    function handleSeqFormOpen() {
+        setSeqFormOpen(!seqFormOpen);
+    };
+    // Load current seq from backend
+    useEffect(() => {
+        const fetchSeq = async () => {
+            try {
+                const res = await axios.get(`${API_URL}/public/counter/get`); // adjust URL
+                if (res.data.length > 0) {
+                    setCurrentSeq(res.data[0].seq); // assuming one counter
+                }
+            } catch (err) {
+                console.error('Failed to fetch sequence:', err);
+            }
+        };
+        fetchSeq();
+    }, [seqFormOpen]); // reload when form opens
+
+    const handleUpdateSeq = async () => {
+        try {
+            const res = await axios.put(`${API_URL}/public/counter/update/${currentSeq}`, {
+                newSeq: parseInt(newSeq),
+            });
+            setCurrentSeq(res.data.seq);
+            setSeqFormOpen(false);
+        } catch (err) {
+            console.error('Failed to update sequence:', err);
+        }
+    };
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -413,6 +447,35 @@ const AdminDashboard = () => {
                                 <Download className="w-4 h-4 mr-2" />
                                 Download Report
                             </Button>
+                            <button className='bg-gradient-to-r from-pink-200 to-purple-200 hover:from-pink-300 hover:to-purple-300 text-balck px-4 py-1 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ' onClick={handleSeqFormOpen}>{currentSeq !== null ? currentSeq.toString().padStart(2, '0') : '...'}</button>
+                            {seqFormOpen && (
+                                <div className='absolute z-20 top-0 left-0 h-screen w-screen backdrop-blur-sm bg-[#ffffff40] '>
+                                    <div className='bg-pink-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-xl shadow-xl z-30'>
+                                        <h2 className='text-white font-bold text-lg mb-2'>Update Sequence</h2>
+                                        <input
+                                            type='number'
+                                            value={newSeq}
+                                            onChange={(e) => setNewSeq(e.target.value)}
+                                            className='p-2 rounded w-full mb-4'
+                                            placeholder='Enter new sequence'
+                                        />
+                                        <div className='flex gap-4'>
+                                            <button
+                                                onClick={handleUpdateSeq}
+                                                className='bg-white text-pink-600 font-semibold px-4 py-2 rounded shadow hover:bg-gray-100'
+                                            >
+                                                Submit
+                                            </button>
+                                            <button
+                                                onClick={handleSeqFormOpen}
+                                                className='bg-white text-gray-600 font-semibold px-4 py-2 rounded shadow hover:bg-gray-200'
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <Button
                                 onClick={handleLogout}
                                 variant="outline"

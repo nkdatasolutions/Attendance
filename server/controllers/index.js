@@ -3,6 +3,8 @@ const { postContact, getContact, getContactByEmail, updateContact, deleteContact
 const { sendOtpToEmail, verifyOtp, verifyOtpAndRegister, verifyHashedOtp } = require('./global/OTP');
 const { postEnrollment, getEnrollment, getEnrollmentByEmail, deleteEnrollment, updateEnrollment } = require('./user/Enrollment');
 
+const { getCounter, incrementCounter, updateCounter, deleteCounter, updateSeqBySeq } = require('./admin/Sequence');
+
 module.exports = { 
     getAuthData,
     getUserNameByEmail,
@@ -16,4 +18,6 @@ module.exports = {
     postEnrollment, getEnrollment, getEnrollmentByEmail, deleteEnrollment, updateEnrollment,
 
     sendOtpToEmail, verifyOtp, verifyOtpAndRegister, verifyHashedOtp,
+
+    getCounter, incrementCounter, updateCounter, deleteCounter, updateSeqBySeq,
 };

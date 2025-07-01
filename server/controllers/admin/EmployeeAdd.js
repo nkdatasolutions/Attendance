@@ -31,7 +31,7 @@ const createEmployee = async (req, res) => {
         );
 
         const paddedId = String(counter.seq).padStart(3, "0");
-        const id = `nk${paddedId}`;
+        const id = `NK${paddedId}`;
 
         // Step 3: Create and save employee
         const newEmployee = new Employee({

@@ -1,8 +1,15 @@
 const express = require('express');
 const globalRouter = express.Router();
 
-const { registerUser, getAuthData, updateUserProfile, signinUser, postContact, getContact, getContactByEmail, deleteContact, updateContact, sendOtpToEmail, verifyOtp, checkUserExistence, verifyOtpAndRegister, initiateRegistration, tempRegisterUser, verifyHashedOtp } = require('../controllers');
+const { registerUser, getAuthData, updateUserProfile, signinUser, postContact, getContact, getContactByEmail, deleteContact, updateContact, sendOtpToEmail, verifyOtp, checkUserExistence, verifyOtpAndRegister, initiateRegistration, tempRegisterUser, verifyHashedOtp, getCounter, incrementCounter, updateCounter, deleteCounter, updateSeqBySeq } = require('../controllers');
 const { registerRequest, signinRequest, ContactRequest } = require('../middlewares');
+
+// Counter routes
+globalRouter.get('/counter/get', getCounter);
+// globalRouter.post('/counter/inc/:id/', incrementCounter);
+globalRouter.put('/:id', updateCounter);
+globalRouter.put('/counter/update/:seq', updateSeqBySeq);
+globalRouter.delete('/:id', deleteCounter);
 
 // Registration route
 globalRouter.post('/register', registerRequest, registerUser);
