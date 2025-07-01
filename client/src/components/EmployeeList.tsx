@@ -44,33 +44,46 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
     };
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchData = async () => {
             try {
-                setLoading(true);
-                setError(null);
-
                 const attendanceResponse = await fetch(`${API_URL}/employee/attendance-dateall/${getTodayDateString()}`);
                 if (!attendanceResponse.ok) throw new Error('No one has checked in today');
 
                 const attendanceData = await attendanceResponse.json();
                 const attendanceArray = Array.isArray(attendanceData) ? attendanceData : [attendanceData];
+
+                if (!isMounted) return;
                 setAttendanceData(attendanceArray);
 
                 const employeeIds = attendanceArray.map(item => item.id);
-                const employeeResponses = await Promise.all(employeeIds.map(id =>
-                    fetch(`${API_URL}/admin/employee/${id}`).then(r => r.json())
-                ));
-                setEmployeeData(employeeResponses);
+                const employeeResponses = await Promise.all(
+                    employeeIds.map(id =>
+                        fetch(`${API_URL}/admin/employee/${id}`).then(r => r.json())
+                    )
+                );
+
+                if (isMounted) setEmployeeData(employeeResponses);
             } catch (err) {
-                // console.error('Fetch failed:', err);
-                setError(err.message || 'Unexpected error');
+                if (isMounted) setError(err.message || 'Unexpected error');
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
-        fetchData();
+        const intervalId = setInterval(() => {
+            fetchData();
+        }, 100); // 100ms = 0.1 sec
+
+        fetchData(); // initial fetch
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId); // cleanup
+        };
     }, []);
+
 
 
     const getStatus = (attendance: AttendanceRecord | undefined) => {
@@ -98,7 +111,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
     if (loading) {
         return (
             <div className="flex flex-col max-w-sm mx-auto items-center justify-center py-16 text-pink-500">
-                <div className="text-5xl animate-spin-slow">🌸</div>
+                <div className="text-5xl animate-spin">🌸</div>
                 <p className="mt-4 text-lg font-semibold">Loading, please wait...</p>
             </div>
         );
@@ -156,7 +169,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <h3 className="font-bold text-gray-900 text-lg">{employee.photo}</h3>
+                                            <h3 className="font-bold text-gray-900 text-<imglg">{employee.name}</h3>
                                             <div className="flex items-center text-gray-600 text-sm">
                                                 <User className="w-4 h-4 mr-1" />
                                                 {employee.position}
