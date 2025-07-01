@@ -96,8 +96,17 @@ const Index = () => {
 
             const data = await response.json();
 
-            // Format time
-            const timeString = `${data.hour.toString().padStart(2, '0')}:${data.minute.toString().padStart(2, '0')}:${data.seconds.toString().padStart(2, '0')}`;
+            // Convert to 12-hour format
+            let hour = data.hour;
+            const minute = data.minute.toString().padStart(2, '0');
+            const second = data.seconds.toString().padStart(2, '0');
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+
+            hour = hour % 12;
+            hour = hour === 0 ? 12 : hour; // Convert hour '0' to '12'
+            const hourStr = hour.toString().padStart(2, '0');
+
+            const timeString = `${hourStr}:${minute} ${ampm}`;
 
             // Format date
             const dateString = `${data.day}/${data.month}/${data.year}`;
@@ -108,6 +117,7 @@ const Index = () => {
             console.error('Failed to fetch live time:', error);
         }
     };
+
 
 
     useEffect(() => {
