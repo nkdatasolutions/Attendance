@@ -71,6 +71,53 @@ const Index = () => {
     }, []);
 
 
+    const DownloadButton = () => {
+        const [visible, setVisible] = useState(false);
+        const deferredPrompt = useRef<any>(null);
+
+        useEffect(() => {
+            const handler = (e: any) => {
+                e.preventDefault();
+                deferredPrompt.current = e;
+                setVisible(true);
+            };
+
+            window.addEventListener("beforeinstallprompt", handler);
+
+            return () => {
+                window.removeEventListener("beforeinstallprompt", handler);
+            };
+        }, []);
+
+        const handleClick = async () => {
+            if (!deferredPrompt.current) return;
+
+            deferredPrompt.current.prompt();
+            const result = await deferredPrompt.current.userChoice;
+
+            if (result.outcome === "accepted") {
+                console.log("App installed");
+            } else {
+                console.log("User dismissed install");
+            }
+
+            deferredPrompt.current = null;
+            setVisible(false);
+        };
+
+        if (!visible) return null;
+
+        return (
+            <Button
+                onClick={handleClick}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-all"
+            >
+                Download
+            </Button>
+        );
+    };
+
+
     const getIndianTime = () => {
         return new Date().toLocaleTimeString('en-IN', {
             timeZone: 'Asia/Kolkata',
@@ -413,6 +460,7 @@ const Index = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-4 text-gray-600">
+                                <DownloadButton />
                                 <Link to={`${user ? "/admin-dashboard" : "/login"}`} className='bg-purple-400 text-white  px-4 py-2 font-semibold rounded-xl  ' > {user ? user.name : "Sign IN"}</Link>
                                 <Clock className="w-5 h-5 text-blue-600" />
                                 <div className="text-right">
