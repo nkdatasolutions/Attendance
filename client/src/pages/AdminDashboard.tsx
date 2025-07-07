@@ -612,7 +612,7 @@ const AdminDashboard = () => {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getStatusBadge(attendance?.checkin === true ? "Present" : attendance?.checkout === true ? "Checked Out" : "Absent")}
+                                                    {getStatusBadge(attendance?.checkin === true ? "Present" : attendance?.checkin === true && attendance?.checkout === true ? "Checked Out" : attendance?.absent === true ? "Absent" : "error")}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center space-x-2">
