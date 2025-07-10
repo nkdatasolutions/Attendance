@@ -59,6 +59,8 @@ const AdminDashboard = () => {
     const [seqFormOpen, setSeqFormOpen] = useState(false);
     const [currentSeq, setCurrentSeq] = useState(null);
     const [newSeq, setNewSeq] = useState('');
+    const [liveTime, setLiveTime] = useState<string>('');
+    const [liveDate, setLiveDate] = useState<string>('');
 
     function handleSeqFormOpen() {
         setSeqFormOpen(!seqFormOpen);
@@ -113,44 +115,85 @@ const AdminDashboard = () => {
         return `${year}-${month}-${day}`;
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                setError(null);
+    const fetchLiveTime = async () => {
+        try {
+            const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata');
 
-                // Fetch attendance data
-                const attendanceResponse = await fetch(`${API_URL}/employee/attendance-dateall/${getTodayDateString()}`);
-                if (!attendanceResponse.ok) {
-                    throw new Error('Failed to fetch attendance data');
-                }
-                const attendanceJson = await attendanceResponse.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Convert to 12-hour format
+            let hour = data.hour;
+            const minute = data.minute.toString().padStart(2, '0');
+            const second = data.seconds.toString().padStart(2, '0');
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+
+            hour = hour % 12;
+            hour = hour === 0 ? 12 : hour; // Convert hour '0' to '12'
+            const hourStr = hour.toString().padStart(2, '0');
+
+            const timeString = `${hourStr}:${minute} ${ampm}`;
+
+            // ✅ Format date as yyyy-mm-dd for API
+            const dateString = `${data.year}-${String(data.month).padStart(2, '0')}-${String(data.day).padStart(2, '0')}`;
+
+            setLiveTime(timeString);
+            setLiveDate(dateString);
+        } catch (error) {
+            console.error('Failed to fetch live time:', error);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchLiveTime();
+        const interval = setInterval(fetchLiveTime, 10000); // update every 10 seconds
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const attendanceRes = await fetch(
+                    `${API_URL}/employee/attendance-dateall/${liveDate}`,
+                    { signal: controller.signal }
+                );
+                const attendanceJson = await attendanceRes.json();
                 const attendanceArray = Array.isArray(attendanceJson) ? attendanceJson : [attendanceJson];
 
                 setAttendanceData(attendanceArray);
-                // console.log('Attendance Data:', attendanceArray);
-                // Extract employee IDs from attendance data
-                const employeeIds = Array.isArray(attendanceJson)
-                    ? attendanceJson.map(item => item.id)
-                    : [attendanceJson.id];
 
-                // Fetch employee data for all employees in attendance
+                const employeeIds = attendanceArray.map(item => item.id);
+
+                // Fetch all employee data concurrently
                 const employeePromises = employeeIds.map(id =>
-                    fetch(`${API_URL}/admin/employee/${id}`).then(res => res.json())
+                    fetch(`${API_URL}/admin/employee/${id}`, { signal: controller.signal })
+                        .then(res => res.json())
                 );
                 const employees = await Promise.all(employeePromises);
                 setEmployeeData(employees);
-                // console.log('Employee Data:', employees);
-
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch data');
+                if (err.name !== 'AbortError') {
+                    setError(err instanceof Error ? err.message : 'Failed to fetch data');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchData();
-    }, []);
+        if (liveDate) fetchData();
+
+        return () => controller.abort(); // Cancel fetches on unmount/change
+    }, [liveDate]);
+
 
     const getStatus = (attendance: AttendanceRecord | undefined) => {
         if (!attendance) return 'absent';
@@ -612,8 +655,12 @@ const AdminDashboard = () => {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getStatusBadge(attendance?.checkin === true ? "Present" : attendance?.checkout === true ? "Checked Out" : "Absent")}
+                                                    {
+                                                        attendance?.checkin === true && attendance?.checkout === true ? "Checked Out" :
+                                                            attendance?.checkin === true ? "Present" :  "Absent" 
+                                                    }
                                                 </TableCell>
+
                                                 <TableCell>
                                                     <div className="flex items-center space-x-2">
                                                         <Button

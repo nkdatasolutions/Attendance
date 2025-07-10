@@ -258,7 +258,8 @@ exports.getCurrentYearMonthWeekAttendance = async (req, res) => {
 // Get Single Date Attendance for all employees
 exports.getSingleDateAttendance = async (req, res) => {
     const { date } = req.params;
-
+    console.log("API HIT with date:", date); // Add this line
+    
     if (!date) {
         return res.status(400).json({ message: "Date is required" });
     }
