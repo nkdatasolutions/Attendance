@@ -34,6 +34,8 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
     const [employeeData, setEmployeeData] = useState<Employee[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [liveTime, setLiveTime] = useState<string>('');
+    const [liveDate, setLiveDate] = useState<string>('');
 
     const getTodayDateString = () => {
         const today = new Date();
@@ -43,13 +45,64 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
         return `${year}-${month}-${day}`;
     };
 
+    const fetchLiveTime = async () => {
+        try {
+            const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata');
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Convert to 12-hour format
+            let hour = data.hour;
+            const minute = data.minute.toString().padStart(2, '0');
+            const second = data.seconds.toString().padStart(2, '0');
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+
+            hour = hour % 12;
+            hour = hour === 0 ? 12 : hour; // Convert hour '0' to '12'
+            const hourStr = hour.toString().padStart(2, '0');
+
+            const timeString = `${hourStr}:${minute} ${ampm}`;
+
+            // ✅ Format date as yyyy-mm-dd for API
+            const dateString = `${data.year}-${String(data.month).padStart(2, '0')}-${String(data.day).padStart(2, '0')}`;
+
+            setLiveTime(timeString);
+            setLiveDate(dateString);
+        } catch (error) {
+            console.error('Failed to fetch live time:', error);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchLiveTime();
+        const interval = setInterval(fetchLiveTime, 10000); // update every 10 seconds
+        return () => clearInterval(interval);
+    }, []);
+
     useEffect(() => {
         let isMounted = true;
 
         const fetchData = async () => {
             try {
-                const attendanceResponse = await fetch(`${API_URL}/employee/attendance-dateall/${getTodayDateString()}`);
-                if (!attendanceResponse.ok) throw new Error('No one has checked in today');
+                const attendanceResponse = await fetch(`${API_URL}/employee/attendance-dateall/${liveDate}`);
+
+                if (attendanceResponse.status === 404) {
+                    if (!isMounted) return;
+                    setAttendanceData([]);
+                    setEmployeeData([]);
+                    setError('No one has checked in today');
+                    return;
+                }
+
+                if (!attendanceResponse.ok) {
+                    console.error('Error fetching attendance:', attendanceResponse.statusText);
+                    throw new Error('Unexpected error while fetching attendance');
+                }
 
                 const attendanceData = await attendanceResponse.json();
                 const attendanceArray = Array.isArray(attendanceData) ? attendanceData : [attendanceData];
@@ -65,6 +118,7 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
                 );
 
                 if (isMounted) setEmployeeData(employeeResponses);
+                setError(null);
             } catch (err) {
                 if (isMounted) setError(err.message || 'Unexpected error');
             } finally {
@@ -72,17 +126,14 @@ const EmployeeList = ({ onCheckOut }: EmployeeListProps) => {
             }
         };
 
-        const intervalId = setInterval(() => {
-            fetchData();
-        }, 100); // 100ms = 0.1 sec
-
-        fetchData(); // initial fetch
+        fetchData(); // only once when liveDate changes
 
         return () => {
             isMounted = false;
-            clearInterval(intervalId); // cleanup
         };
-    }, []);
+    }, [liveDate]);
+
+
 
 
 

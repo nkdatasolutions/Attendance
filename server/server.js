@@ -8,6 +8,7 @@ const globalRouter = require('./routes/globalRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const employeeRouter = require('./routes/employeeRoutes');
 // app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 
 dotenv.config();

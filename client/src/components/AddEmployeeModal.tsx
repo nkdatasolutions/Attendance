@@ -61,39 +61,63 @@ const AddEmployeeModal = ({ isOpen, onClose, onAddEmployee, employees }: AddEmpl
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Example required fields
+        const requiredFields = ["name", "email", "accountno", "phone"];
+
+        for (const field of requiredFields) {
+            if (!formData[field]) {
+                alert(`Field '${field}' is required.`);
+                return;
+            }
+        }
+
+
         const data = new FormData();
+
+        // Append all fields to FormData
         Object.keys(formData).forEach(key => {
-            if (key !== "photoPreview" && formData[key]) {
-                data.append(key, formData[key]);
+            if (key !== "photoPreview" && formData[key] !== undefined && formData[key] !== null) {
+                // Ensure large numbers (like aadhar/accountno) are strings to avoid JS precision loss
+                if (["aadhar", "accountno"].includes(key)) {
+                    data.append(key, String(formData[key]));
+                } else {
+                    data.append(key, formData[key]);
+                }
             }
         });
 
+        // Debug: Print each key-value pair before sending
+        for (let [key, value] of data.entries()) {
+            console.log(`${key}:`, value);
+        }
+
         try {
+            // 🚫 DO NOT set Content-Type manually — Axios will do it (with boundary)
             const response = await axios.post(
                 `${import.meta.env.VITE_API_URL}/admin/employee-add`,
-                data,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
+                data
             );
 
-            // console.log('Success:', response.data);
             alert("Employee added successfully!");
             onClose();
         } catch (error) {
-            // Get specific error message from backend response
+            // Collect full backend validation errors if available
             const message =
-                error?.response?.data?.error || // if backend sends { error: "..." }
-                error?.response?.data?.message || // or { message: "..." }
-                error?.message || // axios-level error
-                "Unknown error occurred";
+                error?.response?.data?.validationErrors
+                    ? Object.entries(error.response.data.validationErrors)
+                        .map(([key, msg]) => `${key}: ${msg}`)
+                        .join("\n")
+                    : error?.response?.data?.error ||
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    "Unknown error occurred";
+
 
             alert(`Error posting employee:\n${message}`);
-            // console.error("Detailed error:", error);
+            console.error("Detailed error:", error);
         }
     };
+
 
 
     return (

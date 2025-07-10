@@ -9,44 +9,67 @@ const fs = require("fs");
 const createEmployee = async (req, res) => {
     let counter = null;
 
+    console.log("Incoming employee data:", req.body);
+    console.log("Photo uploaded:", req.file?.originalname || "No file uploaded");
+
     try {
         let photoUrl = null;
 
-        // Step 1: Upload to Cloudinary if file exists
+        // Upload image
         if (req.file) {
             const result = await cloudinary.uploader.upload(req.file.path, {
-                folder: "employee_photos"
+                folder: "employee_photos",
             });
             photoUrl = result.secure_url;
-
-            // Delete temp file after upload
             fs.unlinkSync(req.file.path);
         }
 
-        // Step 2: Safely increment the counter
+        // Generate ID
         counter = await Counter.findOneAndUpdate(
             { id: "employeeId" },
             { $inc: { seq: 1 } },
             { new: true, upsert: true }
         );
-
         const paddedId = String(counter.seq).padStart(3, "0");
         const id = `NK${paddedId}`;
 
-        // Step 3: Create and save employee
-        const newEmployee = new Employee({
-            ...req.body,
+        // Parse fields
+        const parsed = {
             id,
-            photo: photoUrl, // Use Cloudinary URL
-        });
+            name: req.body.name,
+            position: req.body.position,
+            accountno: req.body.accountno ? parseInt(req.body.accountno) : undefined,
+            email: req.body.email,
+            phone: req.body.phone,
+            degree: req.body.degree,
+            salary: req.body.salary ? parseFloat(req.body.salary) : 0,
+            aadhar: req.body.aadhar ? parseInt(req.body.aadhar) : 0,
+            ifsc: req.body.ifsc,
+            joiningdate: req.body.joiningdate ? new Date(req.body.joiningdate) : undefined,
+            experience: req.body.experience,
+            incrementAmt: req.body.incrementAmt ? parseFloat(req.body.incrementAmt) : 0,
+            incrementDate: req.body.incrementDate ? new Date(req.body.incrementDate) : undefined,
+            increason: req.body.increason || "",
+            photo: photoUrl,
+        };
 
+        const newEmployee = new Employee(parsed);
         const saved = await newEmployee.save();
-        res.status(201).json(saved);
 
+        res.status(201).json(saved);
     } catch (err) {
+        console.error("❌ Mongoose validation error:", err);
+
+        if (err.name === "ValidationError") {
+            const validationErrors = {};
+            for (let field in err.errors) {
+                validationErrors[field] = err.errors[field].message;
+            }
+            return res.status(400).json({ validationErrors });
+        }
+
         res.status(400).json({
             error: err.message,
-            ...(err.errors && { validationErrors: err.errors }),
             ...(counter && { seq: counter.seq }),
         });
     }
